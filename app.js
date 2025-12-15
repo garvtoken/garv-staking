@@ -1,70 +1,106 @@
 let provider;
 let signer;
-let userAddress;
+let stakingContract;
+let tokenContract;
 
-const stakingAddress = "0xf5be3BbA8FB7cd06380b8D902eA976F0fAc8387F";
+// ================= ADDRESSES =================
+const GARV_TOKEN_ADDRESS = "0x15e4f5092af30ea702dcbac71194ccf08885688d";
+const STAKING_ADDRESS   = "0xf5be3BbA8FB7cd06380b8D902eA976F0fAc8387F";
 
-const stakingABI = [
-  "function stake(uint256 amount)",
+// ================= TOKEN ABI (ERC20) =================
+const TOKEN_ABI = [
+  "function approve(address spender,uint256 amount) external returns(bool)",
+  "function balanceOf(address owner) view returns(uint256)",
+  "function decimals() view returns(uint8)"
+];
+
+// ================= STAKING ABI =================
+const STAKING_ABI = [
+  "function stake(uint256 amount) external",
   "function getStakeInfo(address user) view returns(uint256,uint256,uint256,bool)"
 ];
 
-async function connectWallet() {
-  if (!window.ethereum) {
-    alert("Please open in MetaMask / TokenPocket browser");
+// ================= CONNECT WALLET =================
+async function connectWallet(){
+  if(!window.ethereum){
+    alert("Open this site inside MetaMask / Trust Wallet / TokenPocket");
     return;
   }
 
-  try {
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-
+  try{
     provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
-    userAddress = await signer.getAddress();
 
+    const network = await provider.getNetwork();
+    if(network.chainId !== 56){
+      alert("Please switch to BSC Mainnet");
+      return;
+    }
+
+    const address = await signer.getAddress();
     document.getElementById("walletStatus").innerText =
-      "Wallet: " + userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
+      "Wallet Connected: " + address.slice(0,6) + "..." + address.slice(-4);
 
-  } catch (err) {
+    tokenContract   = new ethers.Contract(GARV_TOKEN_ADDRESS, TOKEN_ABI, signer);
+    stakingContract = new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, signer);
+
+  }catch(e){
     alert("Wallet connection rejected");
-    console.error(err);
   }
 }
 
-async function stake() {
-  if (!signer) return alert("Connect wallet first");
+// ================= STAKE =================
+async function stakeTokens(){
+  if(!stakingContract){
+    alert("Connect wallet first");
+    return;
+  }
 
-  const amount = document.getElementById("amount").value;
-  if (!amount || amount <= 0) return alert("Enter valid amount");
+  const amount = document.getElementById("stakeAmount").value;
+  if(!amount || amount <= 0){
+    alert("Enter valid amount");
+    return;
+  }
 
-  const contract = new ethers.Contract(stakingAddress, stakingABI, signer);
+  try{
+    const decimals = await tokenContract.decimals();
+    const parsed = ethers.utils.parseUnits(amount, decimals);
 
-  try {
-    const tx = await contract.stake(
-      ethers.utils.parseUnits(amount, 18)
-    );
-    alert("Transaction sent");
-    await tx.wait();
-    alert("Staked successfully");
-  } catch (e) {
-    alert("Stake failed");
-    console.error(e);
+    const approveTx = await tokenContract.approve(STAKING_ADDRESS, parsed);
+    await approveTx.wait();
+
+    const stakeTx = await stakingContract.stake(parsed);
+    await stakeTx.wait();
+
+    alert("Stake successful");
+
+  }catch(e){
+    alert("Transaction failed");
   }
 }
 
-async function checkStake() {
-  if (!signer) return alert("Connect wallet first");
-
-  const contract = new ethers.Contract(stakingAddress, stakingABI, signer);
-
-  try {
-    const data = await contract.getStakeInfo(userAddress);
-    alert(
-      "Staked: " + ethers.utils.formatUnits(data[0], 18) +
-      "\nUnlock: " + new Date(data[2] * 1000).toLocaleString()
-    );
-  } catch (e) {
-    alert("Error fetching stake info");
-    console.error(e);
+// ================= CHECK STAKE =================
+async function checkMyStake(){
+  if(!stakingContract){
+    alert("Connect wallet first");
+    return;
   }
-      }
+
+  try{
+    const addr = await signer.getAddress();
+    const info = await stakingContract.getStakeInfo(addr);
+
+    document.getElementById("stakeInfo").innerText =
+      "Amount: " + ethers.utils.formatEther(info[0]) +
+      "\nUnlock Time: " + new Date(info[2]*1000).toLocaleString() +
+      "\nWithdrawn: " + info[3];
+
+  }catch(e){
+    alert("No active stake");
+  }
+}
+
+// ================= PRICE (STATIC SAFE) =================
+document.getElementById("priceBox").innerText =
+  "Price via PancakeSwap (on-chain)";
