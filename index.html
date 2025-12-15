@@ -1,209 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>GARV Token | Official Staking DApp</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GARV Token | Official Staking</title>
+
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:linear-gradient(135deg,#041a2d,#0b3d5c);color:#fff;padding:20px}
-.container{max-width:560px;margin:auto}
-.card{background:rgba(255,255,255,.08);border-radius:18px;padding:18px;margin-bottom:18px}
-h1{text-align:center}
-h2{font-size:18px}
-input{width:100%;padding:14px;border-radius:12px;border:none;margin-bottom:10px}
-.btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:16px;font-weight:bold;cursor:pointer;color:#fff}
-.blue{background:#0984e3}
-.green{background:#10ac84}
-.red{background:#c0392b}
-.gray{background:#636e72}
-.badge{text-align:center;padding:8px;border-radius:10px;background:rgba(255,255,255,.12);margin-bottom:6px}
-.small{font-size:13px;opacity:.85}
-.footer{text-align:center;font-size:13px;opacity:.7}
-table{width:100%;font-size:13px}
-td{padding:6px}
-iframe{width:100%;height:360px;border-radius:12px;border:none}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:linear-gradient(180deg,#0b2a3d,#071d2b);
+  color:#fff;
+}
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:20px;
+}
+.card{
+  background:#12344d;
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.3);
+}
+h1{
+  text-align:center;
+  margin-bottom:10px;
+}
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:#1296ff;
+  color:#fff;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:disabled{
+  opacity:.6;
+}
+input{
+  width:100%;
+  padding:14px;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
+  margin-bottom:12px;
+}
+.info{
+  background:#0d2a3f;
+  padding:12px;
+  border-radius:10px;
+  margin-top:10px;
+  font-size:14px;
+}
+.small{
+  font-size:13px;
+  opacity:.85;
+  text-align:center;
+}
+.logo{
+  display:flex;
+  justify-content:center;
+  margin-bottom:10px;
+}
+.logo img{
+  width:90px;
+  height:auto;
+}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<div class="card">
-<h1>GARV Token Stake Now</h1>
-<div class="badge" id="wallet">Wallet: Not Connected</div>
-<button class="btn blue" onclick="connectWallet()">Connect Wallet</button>
-</div>
+  <div class="logo">
+    <img src="./logo.png" alt="GARV Logo">
+  </div>
 
-<div class="card">
-<h2>📈 Live GARV Price</h2>
-<div class="badge" id="price">Loading...</div>
-<iframe src="https://dexscreener.com/bsc/0x00bb266615faeaae9d9d5b17668829580a038b9b"></iframe>
-</div>
+  <h1>GARV Token Stake Now</h1>
 
-<div class="card">
-<h2>🔒 Stake GARV</h2>
-<input id="amount" type="number" placeholder="Enter GARV amount">
-<div class="badge" id="usdValue">≈ 0 USDT</div>
-<button id="stakeBtn" class="btn green" onclick="stake()">Approve & Stake</button>
-</div>
+  <div class="card">
+    <div id="wallet" class="info">Wallet: Not Connected</div>
+    <br>
+    <button onclick="connectWallet()">Connect Wallet</button>
+  </div>
 
-<div class="card">
-<h2>👤 My Stake</h2>
-<table>
-<tr><td>Status</td><td id="status">-</td></tr>
-<tr><td>Amount</td><td id="stakedAmt">-</td></tr>
-<tr><td>Unlock Time</td><td id="unlock">-</td></tr>
-<tr><td>Countdown</td><td id="countdown">-</td></tr>
-</table>
-<button class="btn blue" onclick="loadStake()">Refresh</button><br><br>
-<button class="btn green" onclick="withdraw()">Withdraw (After Unlock)</button>
-</div>
+  <div class="card">
+    <b>📈 Live GARV Price</b>
+    <div id="price" class="info">Loading...</div>
+  </div>
 
-<div class="card">
-<h2>🚨 Emergency</h2>
-<div class="badge" id="emergencyStatus">Checking...</div>
-<button class="btn red" onclick="emergencyWithdraw()">Emergency Withdraw</button>
-</div>
+  <div class="card">
+    <input type="number" id="amount" placeholder="Enter GARV Amount">
+    <button onclick="stake()">🔒 Stake GARV (365 Days)</button>
+  </div>
 
-<div class="card">
-<h2>📜 Stake History</h2>
-<div id="history" class="small">Load wallet to view history</div>
-</div>
+  <div class="card">
+    <button onclick="loadStake()">📊 Check My Stake</button>
+    <div id="stakeInfo" class="info">No data</div>
+  </div>
 
-<div class="card">
-<h2>🛡 Security & Risk Disclosure</h2>
-<ul class="small">
-<li>No guaranteed returns</li>
-<li>Market volatility applies</li>
-<li>Smart contract based staking</li>
-<li>User responsible for wallet security</li>
-</ul>
-<p class="small">
-Token: 0x15e4f5092af30ea702dcbac71194ccf08885688d<br>
-Staking: 0xf5be3BbA8FB7cd06380b8D902eA976F0fAc8387F
-</p>
-</div>
-
-<div class="footer">
-On-chain • Transparent • Non-custodial • Community Driven
-</div>
+  <div class="card small">
+    On-chain • Non-custodial • 365 Days Lock<br>
+    BSC Network Only
+  </div>
 
 </div>
 
 <script>
-// CONSTANTS
-const TOKEN="0x15e4f5092af30ea702dcbac71194ccf08885688d";
-const STAKE="0xf5be3BbA8FB7cd06380b8D902eA976F0fAc8387F";
-const PAIR="0x00bb266615faeaae9d9d5b17668829580a038b9b";
-const MIN_USDT=15;
+// ===== CONFIG =====
+const TOKEN = "0x15e4f5092af30ea702dcbac71194ccf08885688d";
+const STAKE = "0xf5be3BbA8FB7cd06380b8D902eA976F0fAc8387F";
+const PAIR  = "0x00bb266615faeaae9d9d5b17668829580a038b9b";
 
-// ABIs
-const TOKEN_ABI=[
-"function approve(address,uint256)",
-"function decimals() view returns(uint8)"
+const TOKEN_ABI = [
+ "function approve(address,uint256) external returns(bool)",
+ "function balanceOf(address) view returns(uint256)",
+ "function decimals() view returns(uint8)"
 ];
 
-const STAKE_ABI=[
-"function stake(uint256)",
-"function withdraw()",
-"function emergencyWithdraw()",
-"function getStakeInfo(address) view returns(uint256,uint256,uint256,bool)",
-"function paused() view returns(bool)",
-"function emergencyMode() view returns(bool)"
+const STAKE_ABI = [
+ "function stake(uint256) external",
+ "function getStakeInfo(address) view returns(uint256,uint256,uint256,bool)"
 ];
 
-const PAIR_ABI=["function getReserves() view returns(uint112,uint112,uint32)"];
+const PAIR_ABI = [
+ "function getReserves() view returns(uint112,uint112,uint32)"
+];
 
-let provider,signer,token,stakeC,pair,price=0,unlockTs=0,timer;
+let provider, signer, token, stakeC, pair;
 
-// WALLET
+// ===== WALLET CONNECT =====
 async function connectWallet(){
-provider=new ethers.providers.Web3Provider(window.ethereum);
-await provider.send("eth_requestAccounts",[]);
-signer=provider.getSigner();
-const net=await provider.getNetwork();
-if(net.chainId!==56){alert("Switch to BSC");return;}
-token=new ethers.Contract(TOKEN,TOKEN_ABI,signer);
-stakeC=new ethers.Contract(STAKE,STAKE_ABI,signer);
-pair=new ethers.Contract(PAIR,PAIR_ABI,provider);
-document.getElementById("wallet").innerText="Wallet Connected";
-loadPrice();loadStake();loadAdmin();
+  if(!window.ethereum){
+    alert(
+      "Wallet not detected.\n\n" +
+      "Open this site inside:\n" +
+      "• MetaMask Browser\n" +
+      "• TokenPocket Browser\n" +
+      "• Trust Wallet Browser"
+    );
+    return;
+  }
+
+  provider = new ethers.providers.Web3Provider(window.ethereum,"any");
+  await provider.send("eth_requestAccounts",[]);
+  signer = provider.getSigner();
+
+  const net = await provider.getNetwork();
+  if(net.chainId !== 56){
+    alert("Please switch to Binance Smart Chain (BSC)");
+    return;
+  }
+
+  const addr = await signer.getAddress();
+  document.getElementById("wallet").innerText =
+    "Wallet: " + addr.slice(0,6) + "..." + addr.slice(-4);
+
+  token  = new ethers.Contract(TOKEN,TOKEN_ABI,signer);
+  stakeC = new ethers.Contract(STAKE,STAKE_ABI,signer);
+  pair   = new ethers.Contract(PAIR,PAIR_ABI,provider);
+
+  loadPrice();
+  loadStake();
 }
 
-// PRICE
+// ===== LIVE PRICE =====
 async function loadPrice(){
-const r=await pair.getReserves();
-price=Number(r[0])/Number(r[1]);
-document.getElementById("price").innerText="1 GARV ≈ "+price.toFixed(6)+" USDT";
+  try{
+    const r = await pair.getReserves();
+    const price = Number(r[1]) / Number(r[0]);
+    document.getElementById("price").innerText =
+      price.toFixed(6) + " USDT";
+  }catch{
+    document.getElementById("price").innerText = "Unavailable";
+  }
 }
 
-// INPUT
-amount.oninput=()=>{
-const v=amount.value||0;
-const usd=v*price;
-usdValue.innerText="≈ "+usd.toFixed(2)+" USDT";
-stakeBtn.disabled=usd<MIN_USDT;
-stakeBtn.className=usd<MIN_USDT?"btn gray":"btn green";
-};
-
-// STAKE
+// ===== STAKE =====
 async function stake(){
-const amt=amount.value;
-const dec=await token.decimals();
-const val=ethers.utils.parseUnits(amt,dec);
-await token.approve(STAKE,val);
-await stakeC.stake(val);
-alert("Stake successful");
-loadStake();
+  if(!signer) return alert("Connect wallet first");
+
+  const amt = document.getElementById("amount").value;
+  if(!amt || amt<=0) return alert("Enter valid amount");
+
+  const dec = await token.decimals();
+  const value = ethers.utils.parseUnits(amt,dec);
+
+  await token.approve(STAKE,value);
+  await stakeC.stake(value);
+
+  alert("Stake successful");
+  loadStake();
 }
 
-// LOAD STAKE
+// ===== LOAD STAKE =====
 async function loadStake(){
-const addr=await signer.getAddress();
-const s=await stakeC.getStakeInfo(addr);
-stakedAmt.innerText=ethers.utils.formatUnits(s.amount,18);
-status.innerText=s.withdrawn?"Withdrawn":"Active";
-unlockTs=s.unlock;
-unlock.innerText=new Date(unlockTs*1000).toLocaleString();
-startCountdown();
-}
+  if(!signer) return;
 
-// COUNTDOWN
-function startCountdown(){
-clearInterval(timer);
-timer=setInterval(()=>{
-const now=Math.floor(Date.now()/1000);
-let d=unlockTs-now;
-if(d<=0){countdown.innerText="Unlocked";return;}
-const days=Math.floor(d/86400);
-d%=86400;
-const hrs=Math.floor(d/3600);
-d%=3600;
-const mins=Math.floor(d/60);
-const sec=d%60;
-countdown.innerText=`${days}d ${hrs}h ${mins}m ${sec}s`;
-},1000);
-}
+  const addr = await signer.getAddress();
+  const s = await stakeC.getStakeInfo(addr);
 
-// WITHDRAW
-async function withdraw(){
-await stakeC.withdraw();
-alert("Withdraw complete");
-loadStake();
-}
+  if(s.amount==0){
+    document.getElementById("stakeInfo").innerText = "No active stake";
+    return;
+  }
 
-// EMERGENCY
-async function loadAdmin(){
-emergencyStatus.innerText=(await stakeC.emergencyMode())?"Emergency ON":"Emergency OFF";
-}
-async function emergencyWithdraw(){
-if(!(await stakeC.emergencyMode())){alert("Emergency not enabled");return;}
-await stakeC.emergencyWithdraw();
-alert("Emergency withdrawn");
-loadStake();
+  const amt = ethers.utils.formatUnits(s.amount,18);
+  const unlock = new Date(s.unlock*1000).toLocaleDateString();
+
+  document.getElementById("stakeInfo").innerHTML =
+    "Amount: "+amt+" GARV<br>" +
+    "Unlock Date: "+unlock;
 }
 </script>
+
 </body>
 </html>
