@@ -2,89 +2,76 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GARV Token Stake Now</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Ethers v5 (stable) -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <!-- ethers v5 (stable) -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
   <style>
-    body{
-      margin:0;
+    body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(180deg,#081c2f,#0b2a45);
-      color:#fff;
+      background: linear-gradient(180deg,#061b2e,#0b2c46);
+      color: #fff;
     }
-    .container{
-      max-width:420px;
-      margin:30px auto;
-      padding:20px;
+    .box {
+      max-width: 420px;
+      margin: 20px auto;
+      background: #0f2f4a;
+      border-radius: 16px;
+      padding: 20px;
     }
-    h1{
-      text-align:center;
-      margin-bottom:20px;
+    h1 {
+      text-align: center;
+      margin-bottom: 15px;
     }
-    .card{
-      background:#102c44;
-      border-radius:16px;
-      padding:20px;
-      margin-bottom:18px;
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      background: #1da1f2;
+      color: #fff;
+      margin-top: 10px;
     }
-    button{
-      width:100%;
-      padding:14px;
-      border:none;
-      border-radius:12px;
-      background:#1da1ff;
-      color:#fff;
-      font-size:16px;
-      cursor:pointer;
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      margin-top: 10px;
+      font-size: 16px;
     }
-    input{
-      width:100%;
-      padding:14px;
-      border-radius:12px;
-      border:none;
-      margin-bottom:12px;
-      font-size:16px;
-    }
-    .status{
-      text-align:center;
-      margin-bottom:12px;
-      opacity:0.9;
-    }
-    .small{
-      font-size:14px;
-      opacity:0.8;
+    .status {
+      text-align: center;
+      margin-bottom: 10px;
+      opacity: 0.9;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
 
+  <div class="box">
     <h1>GARV Token Stake Now</h1>
 
-    <div class="card">
-      <div id="walletStatus" class="status">Wallet: Not Connected</div>
-      <button onclick="connectWallet()">Connect Wallet</button>
+    <div id="walletStatus" class="status">
+      Wallet: Not Connected
     </div>
 
-    <div class="card">
-      <div class="small">Live GARV Price</div>
-      <div id="priceBox">Loading...</div>
-    </div>
+    <button onclick="connectWallet()">Connect Wallet</button>
+  </div>
 
-    <div class="card">
-      <input type="number" id="stakeAmount" placeholder="Enter GARV Amount"/>
-      <button onclick="stakeTokens()">Stake GARV</button>
-    </div>
+  <div class="box">
+    <div class="status">Enter GARV Amount</div>
+    <input id="amount" type="number" placeholder="GARV Amount" />
+    <button onclick="stake()">Stake GARV</button>
+  </div>
 
-    <div class="card">
-      <button onclick="checkMyStake()">Check My Stake</button>
-      <div id="stakeInfo" class="small"></div>
-    </div>
-
+  <div class="box">
+    <button onclick="checkStake()">Check My Stake</button>
   </div>
 
   <script src="app.js"></script>
