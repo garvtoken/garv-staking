@@ -1,106 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>GARV Token | Official Staking</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GARV Token Stake Now</title>
 
-<!-- LIBRARIES -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <!-- Ethers -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
-<style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:linear-gradient(180deg,#071b2d,#0d2f4f);
-  color:#fff;
-}
-.container{
-  max-width:420px;
-  margin:auto;
-  padding:20px;
-}
-.card{
-  background:#102e48;
-  border-radius:16px;
-  padding:20px;
-  margin-bottom:18px;
-}
-h1{text-align:center;margin-bottom:10px;}
-button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:#0aa0ff;
-  color:#fff;
-  font-size:16px;
-  cursor:pointer;
-}
-input{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:none;
-  margin-bottom:12px;
-}
-.small{
-  font-size:13px;
-  opacity:.8;
-  text-align:center;
-}
-.section-btn{
-  background:#163b5c;
-  margin-top:8px;
-}
-.logo{
-  display:block;
-  margin:10px auto 15px;
-  width:120px;
-}
-</style>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg,#0a2540,#06192e);
+      color: #fff;
+    }
+    .container {
+      max-width: 420px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #0f2d4a;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(90deg,#00c6ff,#0072ff);
+      color: #fff;
+    }
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+    .status {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+  </style>
 </head>
 
 <body>
+  <div class="container">
 
-<div class="container">
+    <h1>GARV Token Stake Now</h1>
 
-<img src="./logo.png" class="logo">
+    <div class="card">
+      <div class="status" id="walletStatus">Wallet: Not Connected</div>
+      <button onclick="connectWallet()">Connect Wallet</button>
+    </div>
 
-<h1>GARV Token Stake Now</h1>
+    <div class="card">
+      <div class="status">Live GARV Price</div>
+      <div class="status" id="price">Loading...</div>
+    </div>
 
-<div class="card">
-<p id="walletStatus">Wallet: Not Connected</p>
-<button onclick="connectWallet()">Connect Wallet</button>
-</div>
+    <div class="card">
+      <input type="number" id="amount" placeholder="Enter GARV Amount">
+      <button onclick="stake()">Stake GARV</button>
+    </div>
 
-<div class="card">
-<h3>Live GARV Price</h3>
-<p id="price">Loading...</p>
-</div>
+    <div class="card">
+      <button onclick="checkStake()">Check My Stake</button>
+    </div>
 
-<div class="card">
-<input type="number" id="stakeAmount" placeholder="Enter GARV Amount">
-<button onclick="stakeTokens()">Stake GARV</button>
-</div>
+  </div>
 
-<div class="card">
-<button onclick="checkStake()">Check My Stake</button>
-<p id="stakeInfo"></p>
-</div>
-
-<div class="card">
-<button class="section-btn">📌 GARV Token Details</button>
-<button class="section-btn">⏱ Stake Details</button>
-<button class="section-btn">🔐 Stake Process</button>
-<button class="section-btn">📜 Terms & Conditions</button>
-</div>
-
-<p class="small">On-chain • Non-custodial • 365 Days Lock</p>
-
-</div>
-
-<script src="./app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
