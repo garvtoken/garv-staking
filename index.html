@@ -2,213 +2,118 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GARV Token – Stake Now</title>
-
-  <!-- Ethers.js -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <title>GARV Token Stake Now</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: radial-gradient(circle at top, #0b2a3a, #071a24);
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0a2540, #0f3d5e);
       color: #ffffff;
-    }
-
-    /* HEADER */
-    .app-header {
       text-align: center;
-      padding: 32px 16px 20px;
     }
 
-    .logo-box {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 12px;
+    .container {
+      max-width: 420px;
+      margin: auto;
+      padding: 30px 15px;
     }
 
-    .logo-box img {
-      height: 72px;
-      width: auto;
-      max-width: 80vw;
-      filter: drop-shadow(0 6px 18px rgba(0,0,0,0.4));
+    .logo {
+      width: 140px;
+      height: auto;
+      margin: 20px auto 10px;
+      display: block;
     }
 
     h1 {
-      font-size: 22px;
-      margin: 8px 0 4px;
-      font-weight: 700;
-    }
-
-    .tagline {
-      font-size: 13px;
-      opacity: 0.8;
-    }
-
-    /* MAIN CARD */
-    .container {
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 20px;
+      font-size: 24px;
+      margin-bottom: 25px;
     }
 
     .card {
-      background: linear-gradient(180deg, #0f2d3d, #0b1f2b);
+      background: rgba(255,255,255,0.08);
       border-radius: 16px;
       padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      margin-bottom: 20px;
     }
 
-    .btn {
+    button {
       width: 100%;
       padding: 14px;
-      border-radius: 12px;
       border: none;
-      background: linear-gradient(135deg, #00b4ff, #0077ff);
+      border-radius: 12px;
+      background: linear-gradient(90deg,#00c6ff,#0072ff);
       color: #fff;
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 16px;
       cursor: pointer;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
+      margin-top: 10px;
     }
 
     input {
       width: 100%;
       padding: 14px;
-      border-radius: 12px;
+      border-radius: 10px;
       border: none;
+      margin-top: 10px;
       font-size: 15px;
-      margin-bottom: 12px;
-      outline: none;
     }
 
-    .section-title {
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .menu div {
+      background: rgba(255,255,255,0.1);
+      padding: 12px;
+      border-radius: 10px;
       font-size: 14px;
-      margin-bottom: 10px;
-      opacity: 0.9;
-    }
-
-    /* INFO SECTIONS */
-    .info-box {
-      font-size: 13px;
-      line-height: 1.6;
-      opacity: 0.85;
     }
 
     footer {
-      text-align: center;
+      margin-top: 25px;
       font-size: 12px;
-      opacity: 0.6;
-      padding: 20px 10px 30px;
-    }
-
-    @media (min-width: 768px) {
-      .logo-box img { height: 90px; }
-      h1 { font-size: 28px; }
+      opacity: 0.8;
     }
   </style>
 </head>
 
 <body>
-
-  <!-- HEADER -->
-  <header class="app-header">
-    <div class="logo-box">
-      <img src="logo.png" alt="GARV Token Logo">
-    </div>
-    <h1>GARV Token – Stake Now</h1>
-    <div class="tagline">On-chain • Non-custodial • 365 Days Lock</div>
-  </header>
-
-  <!-- MAIN -->
   <div class="container">
 
-    <!-- WALLET -->
+    <!-- ✅ LOGO (THIS WILL SHOW 100%) -->
+    <img src="logo.png" alt="GARV Token Logo" class="logo">
+
+    <h1>GARV Token Stake Now</h1>
+
     <div class="card">
-      <button class="btn" onclick="connectWallet()">🔗 Connect Wallet</button>
-      <div id="wallet" style="margin-top:10px;font-size:13px;opacity:0.8;"></div>
+      <button>🔗 Connect Wallet</button>
     </div>
 
-    <!-- STAKE -->
     <div class="card">
-      <div class="section-title">Stake GARV Tokens</div>
-      <input type="number" id="amount" placeholder="Enter GARV Amount">
-      <button class="btn" onclick="stake()">🔒 Stake GARV</button>
+      <input type="number" placeholder="Enter GARV Amount">
+      <button>🔒 Stake GARV</button>
     </div>
 
-    <!-- STAKE DETAILS -->
     <div class="card">
-      <button class="btn" onclick="checkStake()">📊 Check My Stake</button>
-      <div id="stakeInfo" class="info-box" style="margin-top:12px;"></div>
+      <button>📊 Check My Stake</button>
     </div>
 
-    <!-- TOKEN DETAILS -->
-    <div class="card">
-      <div class="section-title">GARV Token Details</div>
-      <div class="info-box">
-        • Fixed supply token<br>
-        • Deployed on BNB Smart Chain<br>
-        • Fully on-chain & transparent
-      </div>
+    <div class="menu">
+      <div>📌 GARV Token Details</div>
+      <div>⏱ Stake Details</div>
+      <div>⚙ Stake Process</div>
+      <div>📜 Terms & Conditions</div>
     </div>
 
-    <!-- PROCESS -->
-    <div class="card">
-      <div class="section-title">Stake Process</div>
-      <div class="info-box">
-        1. Connect wallet<br>
-        2. Enter GARV amount<br>
-        3. Tokens lock for 365 days<br>
-        4. Withdraw after lock ends
-      </div>
-    </div>
-
-    <!-- TERMS -->
-    <div class="card">
-      <div class="section-title">Terms & Conditions</div>
-      <div class="info-box">
-        • Stake is irreversible before 365 days<br>
-        • Smart-contract based (no admin control)<br>
-        • User responsible for wallet security
-      </div>
-    </div>
+    <footer>
+      On-chain • Non-custodial • 365 Days Lock
+    </footer>
 
   </div>
-
-  <footer>
-    © GARV Token • Decentralized Staking Protocol
-  </footer>
-
-  <!-- JS -->
-  <script>
-    let provider, signer;
-
-    async function connectWallet() {
-      if (!window.ethereum) {
-        alert("Wallet not found");
-        return;
-      }
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      document.getElementById("wallet").innerText =
-        "Connected: " + await signer.getAddress();
-    }
-
-    function stake() {
-      alert("Stake function will interact with smart contract");
-    }
-
-    function checkStake() {
-      document.getElementById("stakeInfo").innerText =
-        "Stake data will be fetched from blockchain";
-    }
-  </script>
-
 </body>
 </html>
