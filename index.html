@@ -1,27 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>GARV 365 Days Staking</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GARV 365 Days Staking</title>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  color: #fff;
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: #111827;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+.logo {
+  text-align: center;
+}
+.logo img {
+  width: 80px;
+  margin-bottom: 10px;
+}
+
+h2 {
+  text-align: center;
+  margin: 5px 0 20px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  background: linear-gradient(90deg,#00c6ff,#0072ff);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  margin-top: 10px;
+  font-size: 15px;
+}
+
+.info {
+  background: #1f2937;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 10px;
+  font-size: 14px;
+  word-break: break-all;
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  margin-top: 20px;
+  opacity: 0.7;
+}
+</style>
 </head>
+
 <body>
 
-<h2>GARV Token – 365 Days Auto Staking</h2>
+<div class="container">
 
-<button onclick="connectWallet()">Connect Wallet</button>
-<p id="wallet"></p>
+  <div class="logo">
+    <!-- 🔴 Logo URL replace कर सकते हैं -->
+    <img src="https://raw.githubusercontent.com/garvtoken/garv-staking/main/logo.png" alt="GARV Logo">
+  </div>
 
-<hr>
+  <h2>GARV 365 Days Auto Staking</h2>
 
-<input type="number" id="amount" placeholder="Enter GARV amount">
-<br><br>
-<button onclick="stake()">Stake GARV</button>
+  <div class="card">
+    <button onclick="connectWallet()">🔗 Connect Wallet</button>
+    <div id="wallet" class="info"></div>
+  </div>
 
-<hr>
+  <div class="card">
+    <input type="number" id="amount" placeholder="Enter GARV Amount">
+    <button onclick="stake()">🔒 Stake GARV</button>
+  </div>
 
-<button onclick="getStake()">Check My Stake</button>
-<p id="info"></p>
+  <div class="card">
+    <button onclick="getStake()">📊 Check My Stake</button>
+    <div id="info" class="info"></div>
+  </div>
+
+  <div class="footer">
+    On-chain • Non-custodial • 365 Days Lock
+  </div>
+
+</div>
 
 <script>
 const STAKING_CONTRACT = "0xf5be3BbA8FB7cd06380b8D902eA976F0fAc8387F";
@@ -35,6 +129,7 @@ const abi = [
 let provider, signer, contract;
 
 async function connectWallet() {
+  if (!window.ethereum) return alert("Wallet not detected");
   provider = new ethers.providers.Web3Provider(window.ethereum);
   await provider.send("eth_requestAccounts", []);
   signer = provider.getSigner();
@@ -45,7 +140,7 @@ async function connectWallet() {
 
 async function stake() {
   const amt = document.getElementById("amount").value;
-  if (!amt || amt <= 0) return alert("Enter amount");
+  if (!amt || amt <= 0) return alert("Enter valid amount");
   const tx = await contract.autoStake(
     ethers.utils.parseUnits(amt, 18)
   );
@@ -55,9 +150,10 @@ async function stake() {
 
 async function getStake() {
   const addr = await signer.getAddress();
-  const data = await contract.getStakeInfo(addr);
+  const s = await contract.getStakeInfo(addr);
   document.getElementById("info").innerText =
-    "Amount: " + ethers.utils.formatUnits(data[0],18);
+    "Staked: " + ethers.utils.formatUnits(s[0],18) +
+    "\nUnlock Time: " + new Date(s[2]*1000).toLocaleString();
 }
 </script>
 
