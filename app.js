@@ -9,39 +9,28 @@ const stakingABI = [
   "function getStakeInfo(address user) view returns(uint256,uint256,uint256,bool)"
 ];
 
-// --------------------
-// CONNECT WALLET (WalletConnect)
-// --------------------
 async function connectWallet() {
+  if (!window.ethereum) {
+    alert("Please open in MetaMask / TokenPocket browser");
+    return;
+  }
+
   try {
-    provider = new window.WalletConnectEthereumProvider.EthereumProvider({
-      projectId: "example-project-id", // placeholder
-      chains: [56],
-      optionalChains: [1],
-      showQrModal: true,
-      rpcMap: {
-        56: "https://bsc-dataseed.binance.org/"
-      }
-    });
+    await window.ethereum.request({ method: "eth_requestAccounts" });
 
-    await provider.enable();
-
-    const ethersProvider = new ethers.providers.Web3Provider(provider);
-    signer = ethersProvider.getSigner();
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = provider.getSigner();
     userAddress = await signer.getAddress();
 
     document.getElementById("walletStatus").innerText =
       "Wallet: " + userAddress.slice(0, 6) + "..." + userAddress.slice(-4);
 
   } catch (err) {
-    alert("Wallet connection failed");
+    alert("Wallet connection rejected");
     console.error(err);
   }
 }
 
-// --------------------
-// STAKE GARV
-// --------------------
 async function stake() {
   if (!signer) return alert("Connect wallet first");
 
@@ -63,9 +52,6 @@ async function stake() {
   }
 }
 
-// --------------------
-// CHECK STAKE
-// --------------------
 async function checkStake() {
   if (!signer) return alert("Connect wallet first");
 
@@ -74,11 +60,11 @@ async function checkStake() {
   try {
     const data = await contract.getStakeInfo(userAddress);
     alert(
-      "Amount: " + ethers.utils.formatUnits(data[0], 18) +
+      "Staked: " + ethers.utils.formatUnits(data[0], 18) +
       "\nUnlock: " + new Date(data[2] * 1000).toLocaleString()
     );
   } catch (e) {
     alert("Error fetching stake info");
     console.error(e);
   }
-}
+      }
