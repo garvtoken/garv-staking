@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
 <title>GARV Token Staking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Ethers v5 -->
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
 <style>
 body{
   margin:0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(180deg,#071b2f,#0a2e4f);
+  font-family:Arial, sans-serif;
+  background:linear-gradient(180deg,#071c2f,#0b2a45);
   color:#fff;
 }
 .container{
@@ -21,16 +20,20 @@ body{
   padding:20px;
 }
 .card{
-  background:#0f3557;
-  border-radius:14px;
+  background:#0f3558;
+  border-radius:16px;
   padding:20px;
-  margin-bottom:18px;
+  margin-bottom:20px;
+}
+h1{
+  text-align:center;
+  margin-bottom:10px;
 }
 button{
   width:100%;
   padding:14px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   background:#1ea7ff;
   color:#fff;
   font-size:16px;
@@ -38,133 +41,138 @@ button{
 input{
   width:100%;
   padding:12px;
-  border-radius:8px;
+  border-radius:10px;
   border:none;
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
 .small{
   font-size:13px;
-  opacity:0.9;
+  opacity:.8;
   text-align:center;
 }
 </style>
 </head>
 
 <body>
-
-<!-- 🔒 WALLET-ONLY LOCK -->
-<script>
-if (!window.ethereum) {
-  document.body.innerHTML = `
-    <div style="padding:30px;text-align:center">
-      <h2>GARV Staking DApp</h2>
-      <p>This DApp works only inside decentralized wallets.</p>
-      <p>Open using MetaMask or TokenPocket.</p>
-    </div>
-  `;
-}
-</script>
-
 <div class="container">
 
-  <div class="card">
-    <h2>GARV Token Stake Now</h2>
-    <p id="walletStatus" class="small">Wallet: Not Connected</p>
-    <button onclick="connectWallet()">Connect Wallet</button>
-  </div>
+<h1>GARV Token Stake Now</h1>
 
-  <div class="card">
-    <h3>Live GARV Price</h3>
-    <p class="small">via PancakeSwap (on-chain)</p>
-    <p id="price">Loading...</p>
-  </div>
+<div class="card">
+  <div id="walletStatus" class="small">Wallet: Not Connected</div><br>
+  <button onclick="connectWallet()">Connect Wallet</button>
+</div>
 
-  <div class="card">
-    <input type="number" id="amount" placeholder="Enter GARV Amount"/>
-    <button onclick="stake()">Stake GARV</button>
-  </div>
+<div class="card">
+  <b>Live GARV Price</b><br>
+  <div id="price">via PancakeSwap (on-chain)</div>
+</div>
 
-  <div class="card">
-    <button onclick="checkStake()">Check My Stake</button>
-    <p id="stakeInfo" class="small"></p>
-  </div>
+<div class="card">
+  <input type="number" id="amount" placeholder="Enter GARV Amount">
+  <button onclick="stake()">Stake GARV</button>
+</div>
+
+<div class="card">
+  <button onclick="checkStake()">Check My Stake</button>
+</div>
+
+<div class="small">
+This DApp works only inside decentralized wallets  
+(MetaMask / TokenPocket)
+</div>
 
 </div>
 
 <script>
-let provider, signer, token, staking;
-
-// ✅ ADDRESSES
+/* ================= ADDRESSES ================= */
 const GARV_TOKEN_ADDRESS = "0x15e4f5092af30ea702dcbac71194ccf08885688d";
 const STAKING_ADDRESS    = "0xf5be3BbA8FB7cd06380b8D902eA976F0fAc8387F";
-const PANCAKE_PAIR       = "0x00bb266615faeaae9d9d5b17668829580a038b9b";
 
-// ✅ ERC20 ABI (MINIMAL)
+/* ================= ABIs ================= */
 const TOKEN_ABI = [
-  "function approve(address,uint256) external returns(bool)",
-  "function balanceOf(address) view returns(uint256)",
-  "function decimals() view returns(uint8)"
+ "function approve(address,uint256) external returns(bool)",
+ "function decimals() view returns(uint8)"
 ];
 
-// ✅ STAKING ABI (MINIMAL)
 const STAKING_ABI = [
-  "function stake(uint256 amount) external",
-  "function getStakeInfo(address user) view returns(uint256,uint256,uint256,bool)"
+ "function stake(uint256) external",
+ "function getStakeInfo(address) view returns(uint256,uint256,uint256,bool)"
 ];
 
-// 🔗 CONNECT WALLET
+let provider, signer, token, staking;
+
+/* ================= WALLET CONNECT (FIXED) ================= */
 async function connectWallet(){
-  try{
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    signer = provider.getSigner();
+ try{
+   if(!window.ethereum){
+     alert("Open inside MetaMask or TokenPocket");
+     return;
+   }
 
-    const network = await provider.getNetwork();
-    if(network.chainId !== 56){
-      alert("Please switch to BSC Mainnet");
-      return;
-    }
+   provider = new ethers.providers.Web3Provider(window.ethereum);
 
-    token   = new ethers.Contract(GARV_TOKEN_ADDRESS, TOKEN_ABI, signer);
-    staking = new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, signer);
+   const acc = await provider.listAccounts();
+   if(acc.length === 0){
+     await provider.send("eth_requestAccounts", []);
+   }
 
-    const addr = await signer.getAddress();
-    document.getElementById("walletStatus").innerText =
-      "Wallet Connected: " + addr.slice(0,6) + "..." + addr.slice(-4);
+   signer = provider.getSigner();
+   const network = await provider.getNetwork();
+   if(network.chainId !== 56){
+     alert("Please switch to BSC Mainnet");
+     return;
+   }
 
-  }catch(e){
-    alert("Wallet connection rejected");
-  }
+   token   = new ethers.Contract(GARV_TOKEN_ADDRESS, TOKEN_ABI, signer);
+   staking = new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, signer);
+
+   const address = await signer.getAddress();
+   document.getElementById("walletStatus").innerText =
+     "Wallet Connected: " + address.slice(0,6) + "..." + address.slice(-4);
+
+ }catch(e){
+   console.log(e);
+   alert("Wallet connection cancelled");
+ }
 }
 
-// 🔐 STAKE
+/* ================= STAKE ================= */
 async function stake(){
-  try{
-    const amount = document.getElementById("amount").value;
-    if(!amount || amount <= 0){ alert("Enter amount"); return; }
+ if(!staking){ alert("Connect wallet first"); return; }
 
-    const decimals = await token.decimals();
-    const value = ethers.utils.parseUnits(amount, decimals);
+ const amt = document.getElementById("amount").value;
+ if(!amt || amt<=0){ alert("Enter valid amount"); return; }
 
-    await token.approve(STAKING_ADDRESS, value);
-    await staking.stake(value);
+ try{
+   const decimals = await token.decimals();
+   const value = ethers.utils.parseUnits(amt,decimals);
 
-    alert("Stake successful");
-  }catch(e){
-    alert("Stake failed");
-  }
+   const tx1 = await token.approve(STAKING_ADDRESS,value);
+   await tx1.wait();
+
+   const tx2 = await staking.stake(value);
+   await tx2.wait();
+
+   alert("Stake successful");
+ }catch(e){
+   console.log(e);
+   alert("Transaction failed or rejected");
+ }
 }
 
-// 📊 CHECK STAKE
+/* ================= CHECK STAKE ================= */
 async function checkStake(){
-  try{
-    const addr = await signer.getAddress();
-    const info = await staking.getStakeInfo(addr);
-    document.getElementById("stakeInfo").innerText =
-      "Staked: " + ethers.utils.formatUnits(info[0],18);
-  }catch(e){
-    alert("Unable to fetch stake");
-  }
+ if(!staking){ alert("Connect wallet first"); return; }
+
+ try{
+   const addr = await signer.getAddress();
+   const info = await staking.getStakeInfo(addr);
+   alert("Staked Amount: " + ethers.utils.formatUnits(info.amount,18));
+ }catch(e){
+   console.log(e);
+   alert("Unable to fetch stake info");
+ }
 }
 </script>
 
