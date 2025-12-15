@@ -2,88 +2,64 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GARV Token Stake Now</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Ethers -->
+  <!-- WalletConnect + Ethers -->
+  <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.10.2/dist/index.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(180deg,#0a2540,#06192e);
+      background: linear-gradient(180deg,#081c2f,#0f2e4a);
       color: #fff;
     }
-    .container {
+    .box {
       max-width: 420px;
-      margin: auto;
+      margin: 40px auto;
       padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .card {
-      background: #0f2d4a;
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 20px;
+      background: #102b42;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,.4);
     }
     button {
       width: 100%;
       padding: 14px;
-      border-radius: 10px;
+      margin-top: 12px;
       border: none;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      background: linear-gradient(90deg,#00c6ff,#0072ff);
+      border-radius: 12px;
+      background: #1da1ff;
       color: #fff;
+      font-size: 16px;
+      cursor: pointer;
     }
     input {
       width: 100%;
       padding: 14px;
+      margin-top: 12px;
       border-radius: 10px;
       border: none;
-      margin-bottom: 10px;
-      font-size: 15px;
-    }
-    .status {
-      text-align: center;
-      margin-bottom: 10px;
-      font-size: 14px;
-      opacity: 0.9;
+      font-size: 16px;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
 
-    <h1>GARV Token Stake Now</h1>
+<div class="box">
+  <h2>GARV Token Stake Now</h2>
 
-    <div class="card">
-      <div class="status" id="walletStatus">Wallet: Not Connected</div>
-      <button onclick="connectWallet()">Connect Wallet</button>
-    </div>
+  <p id="walletStatus">Wallet: Not Connected</p>
+  <button onclick="connectWallet()">Connect Wallet</button>
 
-    <div class="card">
-      <div class="status">Live GARV Price</div>
-      <div class="status" id="price">Loading...</div>
-    </div>
+  <input id="amount" type="number" placeholder="Enter GARV Amount">
+  <button onclick="stake()">Stake GARV</button>
 
-    <div class="card">
-      <input type="number" id="amount" placeholder="Enter GARV Amount">
-      <button onclick="stake()">Stake GARV</button>
-    </div>
+  <button onclick="checkStake()">Check My Stake</button>
+</div>
 
-    <div class="card">
-      <button onclick="checkStake()">Check My Stake</button>
-    </div>
-
-  </div>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
