@@ -1,125 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>GARV Token Staking</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>GARV Token Staking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<script src="./config.js"></script>
+  <!-- ethers v5 -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-<style>
-body {
-  background:#0b1220;
-  color:#fff;
-  font-family:Arial, sans-serif;
-  display:flex;
-  justify-content:center;
-  padding:20px;
-}
-.box {
-  width:100%;
-  max-width:420px;
-  background:#111827;
-  padding:20px;
-  border-radius:12px;
-}
-button {
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-  font-size:16px;
-}
-.primary { background:#2563eb; color:white; }
-.gray { background:#374151; color:white; }
-input {
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:8px;
-  border:none;
-}
-.small { font-size:13px; color:#9ca3af; text-align:center; margin-top:10px; }
-</style>
+  <!-- config + app -->
+  <script src="./config.js"></script>
+  <script src="./app.js" defer></script>
+
+  <style>
+    body{
+      background:#0b1220;
+      font-family:Arial, sans-serif;
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      padding:20px;
+    }
+    .box{
+      width:100%;
+      max-width:420px;
+      background:#111827;
+      padding:20px;
+      border-radius:14px;
+    }
+    h2{text-align:center;margin-bottom:10px}
+    .small{font-size:13px;color:#9ca3af;text-align:center}
+    button,input{
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border-radius:8px;
+      border:none;
+      font-size:15px;
+    }
+    .primary{background:#2563eb;color:#fff}
+    .gray{background:#374151;color:#fff}
+    .notice{
+      background:#1f2937;
+      padding:10px;
+      border-radius:8px;
+      font-size:13px;
+      margin-top:12px;
+    }
+  </style>
 </head>
 
 <body>
-<div class="box">
-  <h2 style="text-align:center;">GARV Token Staking</h2>
+  <div class="box">
+    <h2>GARV Token Staking</h2>
 
-  <p id="status" class="small">Wallet: Not Connected</p>
+    <p id="walletStatus" class="small">Wallet: Not Connected</p>
 
-  <button class="primary" onclick="connectWallet()">Connect Wallet</button>
+    <button class="primary" onclick="connectWallet()">Connect Wallet</button>
 
-  <input id="amount" placeholder="Enter GARV amount" />
+    <input id="amount" placeholder="Enter GARV amount" />
 
-  <button class="gray" onclick="approve()">Approve GARV</button>
-  <button class="gray" onclick="stake()">Stake GARV</button>
+    <button class="gray" id="approveBtn" onclick="approve()" disabled>
+      Approve GARV
+    </button>
 
-  <button class="primary" onclick="withdraw()">Withdraw</button>
+    <button class="gray" id="stakeBtn" onclick="stake()" disabled>
+      Stake GARV
+    </button>
 
-  <p class="small">
-    Lock: 365 Days<br>
-    Minimum: 15 USDT worth GARV
-  </p>
-</div>
+    <div class="notice">
+      <b>Your Stake Info</b><br>
+      Amount: <span id="staked">0</span><br>
+      Unlock In: <span id="countdown">--</span>
+    </div>
 
-<script>
-let provider, signer, user, token, staking, decimals;
+    <button class="primary" id="withdrawBtn" onclick="withdraw()" disabled>
+      Withdraw
+    </button>
 
-async function connectWallet() {
-  if (!window.ethereum) {
-    alert("Please use TokenPocket Browser");
-    return;
-  }
-
-  await window.ethereum.request({ method: "eth_requestAccounts" });
-
-  provider = new ethers.providers.Web3Provider(window.ethereum);
-  signer = provider.getSigner();
-  user = await signer.getAddress();
-
-  const net = await provider.getNetwork();
-  if (net.chainId !== CHAIN_ID) {
-    alert("Please switch to BSC Mainnet in TokenPocket");
-    return;
-  }
-
-  token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
-  staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
-  decimals = await token.decimals();
-
-  document.getElementById("status").innerText =
-    "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
-}
-
-async function approve() {
-  const amt = document.getElementById("amount").value;
-  if (!amt) return alert("Enter amount");
-
-  const value = ethers.utils.parseUnits(amt, decimals);
-  const tx = await token.approve(STAKING_CONTRACT, value);
-  await tx.wait();
-  alert("Approval successful");
-}
-
-async function stake() {
-  const amt = document.getElementById("amount").value;
-  if (!amt) return alert("Enter amount");
-
-  const value = ethers.utils.parseUnits(amt, decimals);
-  const tx = await staking.stake(value);
-  await tx.wait();
-  alert("Staked successfully");
-}
-
-async function withdraw() {
-  const tx = await staking.withdraw();
-  await tx.wait();
-  alert("Withdraw successful");
-}
-</script>
+    <div class="notice">
+      ⚠ Tokens are locked for 365 days.<br>
+      Minimum stake: 15 USDT worth GARV.<br>
+      Non-custodial • On-chain • Transparent
+    </div>
+  </div>
 </body>
 </html>
