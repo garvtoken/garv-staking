@@ -106,11 +106,34 @@
   let provider, signer, user;
   let token, staking;
 
-  async function connectWallet() {
-    provider = new ethers.providers.Web3Provider(window.ethereum);
+  <script>
+async function connectWallet() {
+  if (typeof window.ethereum === "undefined") {
+    alert("Please open this DApp inside MetaMask or TokenPocket browser");
+    return;
+  }
+
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
     await provider.send("eth_requestAccounts", []);
-    signer = provider.getSigner();
-    user = await signer.getAddress();
+    const signer = provider.getSigner();
+
+    const network = await provider.getNetwork();
+    if (network.chainId !== 56) {
+      alert("Please switch to BSC Mainnet");
+      return;
+    }
+
+    const address = await signer.getAddress();
+    document.getElementById("walletStatus").innerText =
+      "Wallet Connected: " + address.slice(0, 6) + "..." + address.slice(-4);
+
+  } catch (err) {
+    console.error(err);
+    alert("Wallet connection rejected");
+  }
+}
+</script>
 
     token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
     staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
