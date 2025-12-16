@@ -40,7 +40,7 @@ button,input{
   padding:10px;
   border-radius:8px;
   font-size:13px;
-  margin-top:10px;
+  margin-top:12px;
 }
 .small{
   font-size:13px;
@@ -48,6 +48,12 @@ button,input{
   text-align:center;
   margin-top:10px
 }
+.copyBtn{
+  margin-top:5px;
+  font-size:12px;
+  padding:6px;
+}
+small{word-break:break-all;}
 </style>
 </head>
 
@@ -62,8 +68,13 @@ button,input{
 
 <input id="amount" placeholder="Enter GARV amount" />
 
-<button id="approveBtn" class="gray" onclick="approve()" disabled>Approve GARV</button>
-<button id="stakeBtn" class="gray" onclick="stake()" disabled>Stake GARV</button>
+<button id="approveBtn" class="gray" onclick="approve()" disabled>
+  Approve GARV
+</button>
+
+<button id="stakeBtn" class="gray" onclick="stake()" disabled>
+  Stake GARV
+</button>
 
 <div class="notice">
 <b>Your Stake Info</b><br>
@@ -71,7 +82,30 @@ Amount: <span id="staked">0</span><br>
 Unlock In: <span id="unlock">--</span>
 </div>
 
-<button id="withdrawBtn" class="primary" onclick="withdraw()" disabled>Withdraw</button>
+<button id="withdrawBtn" class="primary" onclick="withdraw()" disabled>
+  Withdraw
+</button>
+
+<!-- ===== DETAILS WITH COPY ===== -->
+<div class="notice">
+<b>Contract & Wallet Details</b><br><br>
+
+Token Contract Address:<br>
+<small id="tokenAddr">--</small>
+<button class="gray copyBtn" onclick="copyText('tokenAddr')">Copy</button><br><br>
+
+Staking Contract Address:<br>
+<small id="stakingAddr">--</small>
+<button class="gray copyBtn" onclick="copyText('stakingAddr')">Copy</button><br><br>
+
+Wallet Address:<br>
+<small id="walletAddr">--</small>
+<button class="gray copyBtn" onclick="copyText('walletAddr')">Copy</button><br><br>
+
+Last Staking Transaction Hash:<br>
+<small id="stakeTx">--</small>
+<button class="gray copyBtn" onclick="copyText('stakeTx')">Copy</button>
+</div>
 
 <div class="notice">
 ⚠ Tokens are locked for 365 days.<br>
@@ -83,6 +117,14 @@ Non-custodial • On-chain • Transparent
 
 <script>
 let provider, signer, user, token, staking, decimals = 18;
+
+// ---------- COPY ----------
+function copyText(id){
+  const text = document.getElementById(id).innerText;
+  if(!text || text === "--") return alert("Nothing to copy");
+  navigator.clipboard.writeText(text);
+  alert("Copied");
+}
 
 // ---------- CONNECT ----------
 async function connectWallet(){
@@ -107,17 +149,18 @@ async function connectWallet(){
     token   = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
     staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
 
-    try{
-      decimals = await token.decimals();
-    }catch{
-      decimals = 18;
-    }
+    try{ decimals = await token.decimals(); }catch{ decimals = 18; }
 
     document.getElementById("status").innerText =
       "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
 
     document.getElementById("approveBtn").disabled = false;
     document.getElementById("stakeBtn").disabled   = false;
+
+    // show addresses
+    document.getElementById("tokenAddr").innerText   = GARV_TOKEN;
+    document.getElementById("stakingAddr").innerText = STAKING_CONTRACT;
+    document.getElementById("walletAddr").innerText  = user;
 
     loadStake();
 
@@ -155,6 +198,8 @@ async function stake(){
     const tx = await staking.stake(value);
     await tx.wait();
 
+    document.getElementById("stakeTx").innerText = tx.hash;
+
     alert("Staked successfully");
     loadStake();
 
@@ -168,7 +213,6 @@ async function stake(){
 async function loadStake(){
   try{
     const info = await staking.getStakeInfo(user);
-
     const stakedAmt = ethers.utils.formatUnits(info[0], decimals);
     document.getElementById("staked").innerText = stakedAmt;
 
@@ -177,7 +221,6 @@ async function loadStake(){
       const unlockTime = Number(info[2]) * 1000;
       updateTimer(unlockTime);
     }
-
   }catch(err){
     console.error(err);
   }
