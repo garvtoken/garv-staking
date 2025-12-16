@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GARV Token Staking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+</head>
+<body style="background:#0b1120;color:#fff;font-family:Arial;text-align:center;padding:20px">
+
+  <h2>GARV Token Staking</h2>
+
+  <p id="walletStatus">Wallet: Not Connected</p>
+  <button onclick="connectWallet()">Connect Wallet</button>
+
+  <br><br>
+
+  <input id="amount" placeholder="Enter GARV amount" />
+  <br><br>
+
+  <button id="approveBtn" onclick="approve()" disabled>Approve GARV</button>
+  <br><br>
+
+  <button id="stakeBtn" onclick="stake()" disabled>Stake GARV</button>
+  <br><br>
+
+  <button onclick="withdraw()">Withdraw</button>
+
+  <p id="stakeInfo">No active stake</p>
+
+  <p>
+    Lock Period: 365 Days<br>
+    Minimum: 15 USDT worth GARV
+  </p>
+
+  <!-- Scripts -->
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+
+</body>
+</html>
