@@ -9,7 +9,6 @@ const STAKING_CONTRACT = "0xf5be3b4a8fb7cd68588b902e4976ff4ac8387f";
 const TOKEN_ABI = [
   "function approve(address spender, uint256 amount) external returns (bool)",
   "function allowance(address owner, address spender) external view returns (uint256)",
-  "function balanceOf(address owner) external view returns (uint256)",
   "function decimals() external view returns (uint8)"
 ];
 
