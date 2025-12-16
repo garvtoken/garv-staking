@@ -2,14 +2,13 @@
 const CHAIN_ID = 56; // BSC Mainnet
 
 // ===== CONTRACT ADDRESSES =====
-const GARV_TOKEN = "0x15e4f5092af30ea702dcbac71194ccf08885688d";        // ✔ GARV Token Address
-const STAKING_CONTRACT = "0xf5be3BbA8FB7cd06380b8D902eA976F0fAc8387F";  // ✔ Staking Contract Address
+const GARV_TOKEN = "0x15e4f5092af30ea702dcbac71194ccf08885688d";
+const STAKING_CONTRACT = "0xf5be3b4a8fb7cd68588b902e4976ff4ac8387f";
 
-// ===== TOKEN ABI (ERC20) =====
+// ===== ERC20 ABI =====
 const TOKEN_ABI = [
   "function approve(address spender, uint256 amount) external returns (bool)",
   "function allowance(address owner, address spender) external view returns (uint256)",
-  "function balanceOf(address owner) external view returns (uint256)",
   "function decimals() external view returns (uint8)"
 ];
 
