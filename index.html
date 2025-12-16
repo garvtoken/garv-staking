@@ -76,10 +76,40 @@ Non-custodial • On-chain • Transparent
 <script>
 let provider, signer, user, token, staking, decimals;
 
-async function connect(){
-  if(!window.ethereum){ alert("Use TokenPocket Browser"); return; }
+async function connect() {
+  try {
+    if (typeof window.ethereum === "undefined") {
+      alert("Please open this DApp inside TokenPocket browser");
+      return;
+    }
 
-  await ethereum.request({method:"eth_requestAccounts"});
+    // Force enable (TokenPocket fix)
+    await window.ethereum.enable();
+
+    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    signer = provider.getSigner();
+    user = await signer.getAddress();
+
+    const network = await provider.getNetwork();
+    if (network.chainId !== CHAIN_ID) {
+      alert("Please switch to BSC Mainnet");
+      return;
+    }
+
+    token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
+    staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
+    decimals = await token.decimals();
+
+    document.getElementById("wallet").innerText =
+      "Connected: " + user.slice(0, 6) + "..." + user.slice(-4);
+
+    loadStake();
+
+  } catch (err) {
+    console.error("Wallet connect error:", err);
+    alert("Wallet connection failed. Reload page and try again.");
+  }
+}
   provider=new ethers.providers.Web3Provider(ethereum);
   signer=provider.getSigner();
   user=await signer.getAddress();
