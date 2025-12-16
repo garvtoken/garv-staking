@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>GARV Token Staking</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script src="./config.js"></script>
@@ -14,19 +14,16 @@ body{background:#0b1220;color:#fff;font-family:Arial;display:flex;justify-conten
 button,input{width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none;font-size:15px}
 .primary{background:#2563eb;color:white}
 .gray{background:#374151;color:white}
-.gray:disabled{opacity:.5}
-.notice{background:#1f2937;padding:10px;border-radius:8px;font-size:13px;margin-top:12px}
-.small{font-size:13px;color:#9ca3af;text-align:center}
-.copyBtn{font-size:12px;padding:6px}
-small{word-break:break-all}
+.small{font-size:13px;color:#9ca3af;text-align:center;margin-top:8px}
+.notice{background:#1f2937;padding:10px;border-radius:8px;font-size:13px;margin-top:10px}
 </style>
 </head>
 
 <body>
 <div class="box">
-
 <h2 style="text-align:center">GARV Token Staking</h2>
-<p id="status" class="small">Wallet: Not Connected</p>
+
+<p id="walletStatus" class="small">Wallet: Not Connected</p>
 
 <button class="primary" onclick="connectWallet()">Connect Wallet</button>
 
@@ -37,99 +34,118 @@ small{word-break:break-all}
 
 <div class="notice">
 <b>Stake Status</b><br>
-Amount: <span id="staked">0</span><br>
-Unlock In: <span id="unlock">--</span>
+Amount: <span id="stakedAmount">0</span><br>
+Unlock In: <span id="unlockTime">--</span>
 </div>
 
-<button id="withdrawBtn" class="primary" onclick="withdraw()" disabled>Withdraw</button>
+<button id="withdrawBtn" class="gray" onclick="withdraw()" disabled>Withdraw</button>
 
 <div class="notice">
 <b>Contract & Wallet Details</b><br><br>
-
-Token Contract:<br>
-<small id="tokenAddr">--</small>
-<button class="gray copyBtn" onclick="copyText('tokenAddr')">Copy</button><br><br>
-
-Staking Contract:<br>
-<small id="stakingAddr">--</small>
-<button class="gray copyBtn" onclick="copyText('stakingAddr')">Copy</button><br><br>
-
-Wallet Address:<br>
-<small id="walletAddr">--</small>
-<button class="gray copyBtn" onclick="copyText('walletAddr')">Copy</button><br><br>
-
-Last Stake Tx:<br>
-<small id="stakeTx">--</small>
-<button class="gray copyBtn" onclick="copyText('stakeTx')">Copy</button>
+Token: <span id="tokenAddr"></span><br>
+Staking: <span id="stakingAddr"></span><br>
+Wallet: <span id="userAddr"></span><br>
+Last Tx: <span id="lastTx">--</span>
 </div>
 
-<div class="notice">
-⚠ 365 Days Lock • On-Chain • Non-Custodial
-</div>
-
+<p class="small">
+365 Days Lock • Minimum 15 USDT worth GARV<br>
+Non-custodial • On-chain • Transparent
+</p>
 </div>
 
 <script>
-let provider, signer, user, token, staking, decimals=18, timer;
-
-function copyText(id){
-  const t=document.getElementById(id).innerText;
-  if(!t||t==="--")return;
-  navigator.clipboard.writeText(t); alert("Copied");
-}
+let provider, signer, user, token, staking, decimals;
 
 async function connectWallet(){
-  if(!window.ethereum) return alert("Use TokenPocket / MetaMask browser");
-  await ethereum.request({method:"eth_requestAccounts"});
-  provider=new ethers.providers.Web3Provider(ethereum);
-  signer=provider.getSigner(); user=await signer.getAddress();
+  if(!window.ethereum) return alert("Use TokenPocket Browser");
+
+  provider=new ethers.providers.Web3Provider(window.ethereum);
+  await provider.send("eth_requestAccounts",[]);
+  signer=provider.getSigner();
+  user=await signer.getAddress();
+
   const net=await provider.getNetwork();
-  if(net.chainId!==CHAIN_ID) return alert("Switch to BSC Mainnet");
+  if(net.chainId!==CHAIN_ID){
+    alert("Switch to BSC Smart Chain");
+    return;
+  }
 
   token=new ethers.Contract(GARV_TOKEN,TOKEN_ABI,signer);
   staking=new ethers.Contract(STAKING_CONTRACT,STAKING_ABI,signer);
-  try{decimals=await token.decimals()}catch{decimals=18}
+  decimals=await token.decimals();
 
-  status.innerText="Connected: "+user.slice(0,6)+"..."+user.slice(-4);
-  approveBtn.disabled=false; stakeBtn.disabled=false;
+  document.getElementById("walletStatus").innerText=
+    "Connected: "+user.slice(0,6)+"..."+user.slice(-4);
 
-  tokenAddr.innerText=GARV_TOKEN;
-  stakingAddr.innerText=STAKING_CONTRACT;
-  walletAddr.innerText=user;
+  document.getElementById("approveBtn").disabled=false;
+  document.getElementById("stakeBtn").disabled=false;
+
+  document.getElementById("tokenAddr").innerText=GARV_TOKEN;
+  document.getElementById("stakingAddr").innerText=STAKING_CONTRACT;
+  document.getElementById("userAddr").innerText=user;
 
   loadStake();
 }
 
 async function approve(){
-  const v=amount.value; if(!v||v<=0)return;
-  const tx=await token.approve(STAKING_CONTRACT,ethers.utils.parseUnits(v,decimals));
-  await tx.wait(); alert("Approved");
+  try{
+    const amt=document.getElementById("amount").value;
+    const val=ethers.utils.parseUnits(amt,decimals);
+    const tx=await token.approve(STAKING_CONTRACT,val);
+    document.getElementById("lastTx").innerText=tx.hash;
+    await tx.wait();
+    alert("Approved");
+  }catch(e){
+    alert("Approve failed: check balance / gas");
+  }
 }
 
 async function stake(){
-  const v=amount.value; if(!v||v<=0)return;
-  const tx=await staking.stake(ethers.utils.parseUnits(v,decimals));
-  await tx.wait(); stakeTx.innerText=tx.hash;
-  alert("Staked"); loadStake();
+  try{
+    const amt=document.getElementById("amount").value;
+    const val=ethers.utils.parseUnits(amt,decimals);
+    const tx=await staking.stake(val);
+    document.getElementById("lastTx").innerText=tx.hash;
+    await tx.wait();
+    alert("Staked");
+    loadStake();
+  }catch(e){
+    alert("Stake failed");
+  }
 }
 
 async function loadStake(){
-  const i=await staking.getStakeInfo(user);
-  staked.innerText=ethers.utils.formatUnits(i[0],decimals);
-  if(i[0]>0){withdrawBtn.disabled=false; startTimer(Number(i[2])*1000)}
+  const info=await staking.getStakeInfo(user);
+  const amount=ethers.utils.formatUnits(info[0],decimals);
+  document.getElementById("stakedAmount").innerText=amount;
+
+  const unlock=Number(info[2])*1000;
+  updateTimer(unlock);
 }
 
-function startTimer(u){
-  clearInterval(timer);
-  timer=setInterval(()=>{
-    const d=u-Date.now();
-    unlock.innerText=d<=0?"Unlocked":Math.floor(d/86400000)+"d "+Math.floor(d/3600000)%24+"h";
+function updateTimer(unlock){
+  const btn=document.getElementById("withdrawBtn");
+  setInterval(()=>{
+    const diff=unlock-Date.now();
+    if(diff<=0 && unlock>0){
+      document.getElementById("unlockTime").innerText="Unlocked";
+      btn.disabled=false;
+      btn.className="primary";
+    }else if(unlock>0){
+      btn.disabled=true;
+      btn.className="gray";
+      const d=Math.floor(diff/86400000);
+      document.getElementById("unlockTime").innerText=d+" days";
+    }
   },1000);
 }
 
 async function withdraw(){
   const tx=await staking.withdraw();
-  await tx.wait(); alert("Withdrawn"); location.reload();
+  document.getElementById("lastTx").innerText=tx.hash;
+  await tx.wait();
+  alert("Withdraw successful");
 }
 </script>
 </body>
