@@ -1,24 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GARV 365 Staking</title>
+  <title>GARV 365 Days Staking</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 </head>
-<body>
 
-<h2>GARV 365 Days Staking</h2>
+<body style="font-family:Arial">
+
+<h2>GARV Token – 365 Days Auto Staking</h2>
 
 <button onclick="connectWallet()">Connect Wallet</button>
-<br><br>
+<p id="wallet"></p>
+
+<hr>
 
 <button onclick="approve()">Approve GARV</button>
 <br><br>
 
-<button onclick="stake()">Stake Now</button>
-<br><br>
+<input id="amount" placeholder="Enter GARV amount">
+<button onclick="stake()">Stake 365 Days</button>
+
+<hr>
+
+<button onclick="checkStake()">Check My Stake</button>
+<p id="stakeInfo"></p>
 
 <button onclick="withdraw()">Withdraw (After 365 Days)</button>
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-<script src="app.js"></script>
+<script>
+const GARV_TOKEN = "0x15e4f5092af30ea702dcbac71194ccf08885688d";
+const STAKING = "0xf5be3BbA8FB7cd06380b8D902eA976F0fAc8387F";
+
+const garvAbi = [
+ "function approve(address,uint256) public returns(bool)",
+ "function decimals() view returns(uint8)"
+];
+
+const stakeAbi = [
+ "function autoStake(uint256)",
+ "function withdraw()",
+ "function getStakeInfo(address) view returns(uint256,uint256,uint256,bool)"
+];
+
+let provider, signer, user;
+
+async function connectWallet(){
+ provider = new ethers.providers.Web3Provider(window.ethereum);
+ await provider.send("eth_requestAccounts",[]);
+ signer = provider.getSigner();
+ user = await signer.getAddress();
+ document.getElementById("wallet").innerText = user;
+}
+
+async function approve(){
+ const token = new ethers.Contract(GARV_TOKEN, garvAbi, signer);
+ await token.approve(STAKING, ethers.constants.MaxUint256);
+ alert("Approved successfully");
+}
+
+async function stake(){
+ const amt = document.getElementById("amount").value;
+ const stake = new ethers.Contract(STAKING, stakeAbi, signer);
+ await stake.autoStake(ethers.utils.parseEther(amt));
+ alert("Staked for 365 days");
+}
+
+async function checkStake(){
+ const stake = new ethers.Contract(STAKING, stakeAbi, provider);
+ const info = await stake.getStakeInfo(user);
+ document.getElementById("stakeInfo").innerText =
+  "Amount: " + ethers.utils.formatEther(info[0]) +
+  "\nUnlock Time: " + new Date(info[2]*1000);
+}
+
+async function withdraw(){
+ const stake = new ethers.Contract(STAKING, stakeAbi, signer);
+ await stake.withdraw();
+ alert("Withdraw completed");
+}
+</script>
+
 </body>
 </html>
