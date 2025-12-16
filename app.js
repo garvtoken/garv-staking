@@ -1,6 +1,11 @@
 let provider, signer, token, staking, user;
 
 async function connectWallet() {
+  const network = await provider.getNetwork();
+if (network.chainId !== 56) {
+  alert("Please switch to BSC Mainnet");
+  return;
+}
   if (!window.ethereum) {
     alert("MetaMask required");
     return;
