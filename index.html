@@ -1,190 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GARV Token Staking</title>
-
-  <!-- ethers.js -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-
-  <style>
-    body {
-      background: #0b1220;
-      font-family: Arial, sans-serif;
-      color: #fff;
-      text-align: center;
-      padding: 20px;
-    }
-    .box {
-      max-width: 420px;
-      margin: auto;
-      background: #111a2e;
-      padding: 20px;
-      border-radius: 12px;
-    }
-    button, input {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-    }
-    button {
-      background: #1e90ff;
-      color: #fff;
-      cursor: pointer;
-    }
-    button:disabled {
-      background: #555;
-    }
-    input {
-      background: #fff;
-      color: #000;
-    }
-    .info {
-      margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.9;
-    }
-  </style>
+  <title>GARV 365 Staking</title>
 </head>
-
 <body>
 
-<script>
-  // ❗ Only wallet browser allowed
-  if (!window.ethereum) {
-    document.body.innerHTML = `
-      <h2>Open this DApp inside MetaMask or TokenPocket browser only</h2>
-    `;
-  }
-</script>
+<h2>GARV 365 Days Staking</h2>
 
-<div class="box">
-  <h2>GARV Token Staking</h2>
+<button onclick="connectWallet()">Connect Wallet</button>
+<br><br>
 
-  <p id="walletStatus">Wallet: Not Connected</p>
+<button onclick="approve()">Approve GARV</button>
+<br><br>
 
-  <button onclick="connectWallet()">Connect Wallet</button>
+<button onclick="stake()">Stake Now</button>
+<br><br>
 
-  <div class="info" id="price">Loading price...</div>
+<button onclick="withdraw()">Withdraw (After 365 Days)</button>
 
-  <input type="number" id="amount" placeholder="Enter GARV amount"/>
-
-  <button id="approveBtn" onclick="approve()" disabled>Approve GARV</button>
-  <button id="stakeBtn" onclick="stake()" disabled>Stake GARV</button>
-
-  <div class="info" id="stakeInfo">No active stake</div>
-
-  <button onclick="withdraw()">Withdraw</button>
-
-  <div class="info">
-    Lock Period: 365 Days<br>
-    Minimum: 15 USDT worth GARV
-  </div>
-</div>
-
-<script>
-  // ===== CONFIG =====
-  const GARV_TOKEN = "0x15e4f5092Af30eA702DCBaC71194CCF08885688d"; // GARV token
-  const STAKING_CONTRACT = "0xf5be3BbA8FB7cXXXXXXXXXXXX"; // staking contract
-
-  const TOKEN_ABI = [
-    "function approve(address spender,uint256 amount) external returns(bool)",
-    "function balanceOf(address owner) view returns(uint256)",
-    "function decimals() view returns(uint8)"
-  ];
-
-  const STAKING_ABI = [
-    "function stake(uint256 amount) external",
-    "function withdraw() external",
-    "function getStakeInfo(address user) view returns(uint256,uint256,uint256,bool)"
-  ];
-
-  let provider, signer, user;
-  let token, staking;
-
-  <script>
-async function connectWallet() {
-  if (typeof window.ethereum === "undefined") {
-    alert("Please open this DApp inside MetaMask or TokenPocket browser");
-    return;
-  }
-
-  try {
-    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-
-    const network = await provider.getNetwork();
-    if (network.chainId !== 56) {
-      alert("Please switch to BSC Mainnet");
-      return;
-    }
-
-    const address = await signer.getAddress();
-    document.getElementById("walletStatus").innerText =
-      "Wallet Connected: " + address.slice(0, 6) + "..." + address.slice(-4);
-
-  } catch (err) {
-    console.error(err);
-    alert("Wallet connection rejected");
-  }
-}
-</script>
-    token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
-    staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
-
-    document.getElementById("walletStatus").innerText =
-      "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
-
-    document.getElementById("approveBtn").disabled = false;
-    loadStake();
-  }
-
-  async function approve() {
-    const amt = ethers.utils.parseUnits(
-      document.getElementById("amount").value,
-      18
-    );
-    const tx = await token.approve(STAKING_CONTRACT, amt);
-    await tx.wait();
-    document.getElementById("stakeBtn").disabled = false;
-  }
-
-  async function stake() {
-    const amt = ethers.utils.parseUnits(
-      document.getElementById("amount").value,
-      18
-    );
-    const tx = await staking.stake(amt);
-    await tx.wait();
-    loadStake();
-  }
-
-  async function withdraw() {
-    const tx = await staking.withdraw();
-    await tx.wait();
-    loadStake();
-  }
-
-  async function loadStake() {
-    try {
-      const s = await staking.getStakeInfo(user);
-      if (s[0].toString() === "0") {
-        document.getElementById("stakeInfo").innerText = "No active stake";
-      } else {
-        const unlockDate = new Date(s[2] * 1000);
-        document.getElementById("stakeInfo").innerText =
-          "Staked: " +
-          ethers.utils.formatUnits(s[0],18) +
-          " GARV\nUnlock: " +
-          unlockDate.toDateString();
-      }
-    } catch {}
-  }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
