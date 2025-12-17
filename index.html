@@ -1,206 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>GARV Token Staking</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
 <style>
-  body {
-    background:#0b1220;
-    color:#fff;
-    font-family:Arial, sans-serif;
-  }
-  .box {
-    max-width:420px;
-    margin:40px auto;
-    background:#121a2b;
-    padding:20px;
-    border-radius:12px;
-  }
-  h2 { text-align:center; }
-
-  input, button {
-    width:100%;
-    padding:14px;
-    margin-top:10px;
-    border:none;
-    border-radius:8px;
-    font-size:16px;
-  }
-
-  .primary {
-    background:#2563eb;
-    color:#fff;
-  }
-
-  .gray {
-    background:#374151;
-    color:#9ca3af;
-  }
-
-  .disabled {
-    background:#1f2937;
-    color:#6b7280;
-  }
-
-  .info {
-    background:#0f172a;
-    padding:12px;
-    border-radius:8px;
-    margin-top:15px;
-    font-size:14px;
-  }
-
-  .small { font-size:13px; color:#9ca3af; margin-top:10px; }
+body{background:#0b1220;color:#fff;font-family:Arial}
+.box{max-width:420px;margin:40px auto;background:#121a2b;padding:20px;border-radius:12px}
+h2{text-align:center}
+input,button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:8px;font-size:16px}
+.primary{background:#2563eb;color:#fff}
+.gray{background:#374151;color:#9ca3af}
+.disabled{background:#1f2937;color:#6b7280}
+.info{background:#0f172a;padding:12px;border-radius:8px;margin-top:15px;font-size:14px}
+.small{font-size:13px;color:#9ca3af;margin-top:10px}
+.badge{margin-top:8px;font-weight:bold}
+.locked{color:#facc15}
+.unlocked{color:#4ade80}
 </style>
 </head>
 
 <body>
 
 <div class="box">
-  <h2>GARV Token Staking</h2>
-  <div id="walletStatus" class="small">Wallet: Not Connected</div>
+<h2>GARV Token Staking</h2>
 
-  <button id="connectBtn" class="primary" onclick="connectWallet()">Connect Wallet</button>
+<div id="walletStatus" class="small">Wallet: Not Connected</div>
 
-  <input id="amount" placeholder="Enter GARV amount" />
+<button id="connectBtn" class="primary" onclick="connectWallet()">Connect Wallet</button>
 
-  <button id="approveBtn" class="disabled" disabled onclick="approve()">Approve GARV</button>
-  <button id="stakeBtn" class="disabled" disabled onclick="stake()">Stake GARV</button>
+<input id="amount" placeholder="Enter GARV amount">
 
-  <div class="info">
-    <b>Your Stake Info</b><br>
-    Staked: <span id="staked">0</span><br>
-    Unlock In: <span id="countdown">--</span>
-  </div>
+<button id="approveBtn" class="disabled" disabled onclick="approve()">Approve GARV</button>
+<button id="stakeBtn" class="disabled" disabled onclick="stake()">Stake GARV</button>
 
-  <button id="withdrawBtn" class="disabled" disabled onclick="withdraw()">Withdraw Locked</button>
+<div class="info">
+<b>Your Stake Info</b><br>
+Staked: <span id="staked">0</span><br>
+Unlock Date: <span id="unlockDate">--</span><br>
+Countdown: <span id="countdown">--</span>
+<div id="statusBadge" class="badge locked">NOT STAKED</div>
+</div>
 
-  <div class="small">
-    🔒 Lock Period: 365 Days<br>
-    💰 Minimum: 15 USDT worth GARV<br>
-    🔍 Non-custodial • On-chain • Transparent
-  </div>
+<button id="withdrawBtn" class="disabled" disabled>Withdraw Locked</button>
+
+<div class="small">
+🔒 Lock Period: 365 Days<br>
+💰 Minimum: 15 USDT worth GARV<br>
+🎁 Reward: 100% GARV after lock<br>
+🔍 Fully on-chain • BscScan verified<br><br>
+Connect Bharat verifies staking for platform benefits.<br>
+Tokens remain fully user-controlled.
+</div>
 </div>
 
 <script>
-/* ================= CONFIG ================= */
-const CHAIN_ID = 56; // BSC Mainnet
-const GARV_TOKEN = "YOUR_GARV_TOKEN_ADDRESS";
+/* CONFIG */
+const CHAIN_ID = 56;
+const GARV_TOKEN = "YOUR_GARV_TOKEN";
 const STAKING_CONTRACT = "YOUR_STAKING_CONTRACT";
 
 const TOKEN_ABI = [
-  "function approve(address,uint256) external returns(bool)",
-  "function decimals() view returns(uint8)"
+ "function approve(address,uint256) external returns(bool)",
+ "function decimals() view returns(uint8)"
 ];
-
 const STAKING_ABI = [
-  "function stake(uint256) external",
-  "function withdraw() external",
-  "function getStakeInfo(address) view returns(uint256,uint256,uint256)"
+ "function stake(uint256)",
+ "function withdraw()",
+ "function getStakeInfo(address) view returns(uint256,uint256,uint256)"
 ];
 
-/* ================= STATE ================= */
-let provider, signer, user, token, staking, decimals = 18, timer;
+let provider, signer, user, token, staking, decimals=18, timer;
 
-/* ================= WALLET ================= */
-async function connectWallet() {
-  if (!window.ethereum) return alert("Open in MetaMask / TokenPocket");
+/* CONNECT */
+async function connectWallet(){
+ if(!window.ethereum) return alert("Open in MetaMask / TokenPocket");
+ provider=new ethers.providers.Web3Provider(window.ethereum);
+ await provider.send("eth_requestAccounts",[]);
+ signer=provider.getSigner();
+ user=await signer.getAddress();
+ const net=await provider.getNetwork();
+ if(net.chainId!==CHAIN_ID) return alert("Switch to BSC Mainnet");
 
-  provider = new ethers.providers.Web3Provider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  signer = provider.getSigner();
-  user = await signer.getAddress();
+ token=new ethers.Contract(GARV_TOKEN,TOKEN_ABI,signer);
+ staking=new ethers.Contract(STAKING_CONTRACT,STAKING_ABI,signer);
+ try{decimals=await token.decimals()}catch{}
 
-  const net = await provider.getNetwork();
-  if (net.chainId !== CHAIN_ID) return alert("Switch to BSC Mainnet");
+ document.getElementById("walletStatus").innerText=
+ "Connected: "+user.slice(0,6)+"..."+user.slice(-4);
 
-  token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
-  staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
+ const c=document.getElementById("connectBtn");
+ c.innerText="Wallet Connected";c.disabled=true;c.className="gray";
 
-  try { decimals = await token.decimals(); } catch {}
+ document.getElementById("approveBtn").disabled=false;
+ document.getElementById("approveBtn").className="primary";
+ document.getElementById("stakeBtn").disabled=false;
+ document.getElementById("stakeBtn").className="primary";
 
-  document.getElementById("walletStatus").innerText =
-    "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
-
-  const btn = document.getElementById("connectBtn");
-  btn.innerText = "Wallet Connected";
-  btn.disabled = true;
-  btn.className = "gray";
-
-  document.getElementById("approveBtn").disabled = false;
-  document.getElementById("approveBtn").className = "primary";
-
-  document.getElementById("stakeBtn").disabled = false;
-  document.getElementById("stakeBtn").className = "primary";
-
-  loadStake();
+ loadStake();
 }
 
-/* ================= ACTIONS ================= */
-async function approve() {
-  const amt = document.getElementById("amount").value;
-  if (!amt) return alert("Enter amount");
-  const val = ethers.utils.parseUnits(amt, decimals);
-  const tx = await token.approve(STAKING_CONTRACT, val);
-  await tx.wait();
-  alert("Approve Successful");
+/* ACTIONS */
+async function approve(){
+ const v=ethers.utils.parseUnits(amount.value,decimals);
+ await (await token.approve(STAKING_CONTRACT,v)).wait();
+ alert("Approve successful");
 }
 
-async function stake() {
-  const amt = document.getElementById("amount").value;
-  if (!amt) return alert("Enter amount");
-  const val = ethers.utils.parseUnits(amt, decimals);
-  const tx = await staking.stake(val);
-  await tx.wait();
-  alert("Stake Successful");
-  loadStake();
+async function stake(){
+ const v=ethers.utils.parseUnits(amount.value,decimals);
+ await (await staking.stake(v)).wait();
+ alert("Stake successful");
+ loadStake();
 }
 
-async function withdraw() {
-  const tx = await staking.withdraw();
-  await tx.wait();
-  alert("Withdraw Successful");
-  loadStake();
+async function withdraw(){
+ await (await staking.withdraw()).wait();
+ alert("Withdraw successful");
+ loadStake();
 }
 
-/* ================= LOAD INFO ================= */
-async function loadStake() {
-  const info = await staking.getStakeInfo(user);
-  document.getElementById("staked").innerText =
-    ethers.utils.formatUnits(info[0], decimals);
-  startTimer(Number(info[2]) * 1000);
+/* LOAD */
+async function loadStake(){
+ const i=await staking.getStakeInfo(user);
+ staked.innerText=ethers.utils.formatUnits(i[0],decimals);
+
+ if(i[0].eq(0)){
+  statusBadge.innerText="NOT STAKED";
+  statusBadge.className="badge locked";
+  return;
+ }
+
+ const unlock=i[2]*1000;
+ unlockDate.innerText=new Date(unlock).toLocaleString();
+ startTimer(unlock);
 }
 
-/* ================= TIMER ================= */
-function startTimer(unlock) {
-  const btn = document.getElementById("withdrawBtn");
-  clearInterval(timer);
-
-  timer = setInterval(() => {
-    const diff = unlock - Date.now();
-
-    if (diff <= 0) {
-      document.getElementById("countdown").innerText = "Unlocked";
-      btn.disabled = false;
-      btn.className = "primary";
-      btn.innerText = "Withdraw GARV";
-      clearInterval(timer);
-    } else {
-      btn.disabled = true;
-      btn.className = "disabled";
-      btn.innerText = "Withdraw Locked";
-
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor(diff / 3600000) % 24;
-      const m = Math.floor(diff / 60000) % 60;
-      document.getElementById("countdown").innerText =
-        ${d}d ${h}h ${m}m;
-    }
-  }, 1000);
+/* TIMER */
+function startTimer(unlock){
+ clearInterval(timer);
+ timer=setInterval(()=>{
+  const diff=unlock-Date.now();
+  if(diff<=0){
+   countdown.innerText="Unlocked";
+   withdrawBtn.disabled=false;
+   withdrawBtn.className="primary";
+   withdrawBtn.innerText="Withdraw GARV";
+   statusBadge.innerText="UNLOCKED";
+   statusBadge.className="badge unlocked";
+   withdrawBtn.onclick=withdraw;
+   clearInterval(timer);
+  }else{
+   const d=Math.floor(diff/86400000);
+   const h=Math.floor(diff/3600000)%24;
+   const m=Math.floor(diff/60000)%60;
+   countdown.innerText=${d}d ${h}h ${m}m;
+   statusBadge.innerText="LOCKED";
+   statusBadge.className="badge locked";
+  }
+ },1000);
 }
 </script>
 
