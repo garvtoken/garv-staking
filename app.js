@@ -1,21 +1,21 @@
-let provider, signer, user, token, staking;
-let decimals = 18;
+let provider, signer, user, token, staking, decimals = 18;
 let timer;
 
 async function connectWallet() {
-  try {const eth = window.ethereum;
-if (!eth) {
-  alert("Please open in MetaMask / TokenPocket / Trust Wallet DApp browser");
-  return;
-}
-    provider = new ethers.providers.Web3Provider(eth, "any");
+  try {
+    if (!window.ethereum) {
+      alert("Open in MetaMask / TokenPocket / Trust Wallet DApp browser");
+      return;
+    }
+
+    provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
     user = await signer.getAddress();
 
     const net = await provider.getNetwork();
     if (net.chainId !== CHAIN_ID) {
-      alert("Switch to BSC Mainnet");
+      alert("Please switch to BSC Mainnet");
       return;
     }
 
@@ -27,17 +27,22 @@ if (!eth) {
     document.getElementById("walletStatus").innerText =
       "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
 
-    const cbtn = document.getElementById("connectBtn");
-    cbtn.innerText = "Wallet Connected";
-    cbtn.disabled = true;
-    cbtn.className = "gray";
+    const btn = document.getElementById("connectBtn");
+    btn.innerText = "Wallet Connected";
+    btn.disabled = true;
+    btn.className = "gray";
 
     document.getElementById("approveBtn").disabled = false;
     document.getElementById("approveBtn").className = "primary";
-
     document.getElementById("stakeBtn").disabled = false;
     document.getElementById("stakeBtn").className = "primary";
 
+    document.getElementById("garvAddr").innerText =
+      GARV_TOKEN.slice(0,6) + "..." + GARV_TOKEN.slice(-4);
+    document.getElementById("stakeAddr").innerText =
+      STAKING_CONTRACT.slice(0,6) + "..." + STAKING_CONTRACT.slice(-4);
+
+    loadLiveRate();
     loadStake();
 
   } catch (e) {
@@ -49,7 +54,6 @@ if (!eth) {
 async function approve() {
   const amt = document.getElementById("amount").value;
   if (!amt) return alert("Enter amount");
-
   const val = ethers.utils.parseUnits(amt, decimals);
   const tx = await token.approve(STAKING_CONTRACT, val);
   await tx.wait();
@@ -59,66 +63,61 @@ async function approve() {
 async function stake() {
   const amt = document.getElementById("amount").value;
   if (!amt) return alert("Enter amount");
-
   const val = ethers.utils.parseUnits(amt, decimals);
   const tx = await staking.stake(val);
+  document.getElementById("stakeTx").innerText =
+    tx.hash.slice(0,10) + "...";
   await tx.wait();
-  alert("Stake successful");
   loadStake();
 }
 
 async function withdraw() {
   const tx = await staking.withdraw();
   await tx.wait();
-  alert("Withdraw successful");
   loadStake();
 }
 
 async function loadStake() {
-  if (!staking || !user) return;
-
   const info = await staking.getStakeInfo(user);
+  document.getElementById("staked").innerText =
+    ethers.utils.formatUnits(info[0], decimals);
 
-  const staked = ethers.utils.formatUnits(info[0], decimals);
-  document.getElementById("staked").innerText = staked;
-
-  if (info[0].eq(0)) {
-    document.getElementById("stakeStatus").innerText = "NOT STAKED";
-    document.getElementById("withdrawBtn").disabled = true;
-    document.getElementById("withdrawBtn").className = "gray";
-    return;
+  if (info[0].gt(0)) {
+    document.getElementById("status").innerText = "STAKED";
+    const unlock = Number(info[2]) * 1000;
+    document.getElementById("unlockDate").innerText =
+      new Date(unlock).toLocaleDateString();
+    startTimer(unlock);
   }
-
-  document.getElementById("stakeStatus").innerText = "STAKED";
-
-  const unlockTs = Number(info[2]) * 1000;
-  document.getElementById("unlock").innerText =
-    new Date(unlockTs).toLocaleDateString();
-
-  startCountdown(unlockTs);
 }
 
-function startCountdown(unlock) {
+function startTimer(unlock) {
   clearInterval(timer);
-
   timer = setInterval(() => {
     const diff = unlock - Date.now();
     const btn = document.getElementById("withdrawBtn");
-
     if (diff <= 0) {
       document.getElementById("countdown").innerText = "Unlocked";
       btn.disabled = false;
       btn.className = "primary";
       btn.innerText = "Withdraw GARV";
-      clearInterval(timer);
     } else {
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor(diff / 3600000) % 24;
-      const m = Math.floor(diff / 60000) % 60;
-      document.getElementById("countdown").innerText =
-        ${d}d ${h}h ${m}m;
-      btn.disabled = true;
-      btn.className = "gray";
+      const d = Math.floor(diff/86400000);
+      const h = Math.floor(diff/3600000)%24;
+      document.getElementById("countdown").innerText = ${d}d ${h}h;
     }
   }, 1000);
+}
+
+async function loadLiveRate() {
+  try {
+    const r = await fetch(
+      "https://api.pancakeswap.info/api/v2/tokens/" + GARV_TOKEN
+    );
+    const j = await r.json();
+    document.getElementById("liveRate").innerText =
+      Number(j.data.price).toFixed(6);
+  } catch {
+    document.getElementById("liveRate").innerText = "Unavailable";
+  }
 }
