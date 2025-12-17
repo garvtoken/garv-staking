@@ -23,24 +23,9 @@ body{
   background:#0f1a33;
   border-radius:16px;
 }
-h1{
-  text-align:center;
-  margin-bottom:10px;
-}
-.status{
-  text-align:center;
-  margin-bottom:15px;
-  color:#9fb3ff;
-}
-input{
-  width:100%;
-  padding:14px;
-  border-radius:10px;
-  border:none;
-  font-size:16px;
-  margin-bottom:12px;
-}
-button{
+h1{text-align:center;}
+.status{text-align:center;color:#9fb3ff;margin-bottom:15px;}
+input,button{
   width:100%;
   padding:14px;
   border-radius:10px;
@@ -48,102 +33,72 @@ button{
   font-size:16px;
   margin-top:8px;
 }
-.primary{
-  background:#2f6bff;
-  color:#fff;
-}
-.gray{
-  background:#3a3f55;
-  color:#aaa;
-}
+.primary{background:#2f6bff;color:#fff;}
+.gray{background:#3a3f55;color:#aaa;}
 .card{
   background:#16213e;
   padding:14px;
   border-radius:12px;
   margin-top:15px;
 }
-.small{
-  font-size:13px;
-  color:#cbd3ff;
-}
-.highlight{
-  color:#ffd166;
-  font-weight:bold;
-}
-.addr{
-  font-size:13px;
-  word-break:break-all;
-  color:#8fa6ff;
-}
-.footer{
-  text-align:center;
-  margin-top:15px;
-  font-size:13px;
-  color:#9fb3ff;
-}
+.small{font-size:13px;color:#cbd3ff;}
+.highlight{color:#ffd166;font-weight:bold;}
+.addr{font-size:13px;word-break:break-all;color:#8fa6ff;}
+.footer{text-align:center;font-size:13px;color:#9fb3ff;margin-top:15px;}
 </style>
 </head>
 
 <body>
-
 <div class="box">
 
 <h1>GARV Token Staking</h1>
 
-<div class="status" id="walletStatus">Wallet: Not Connected</div>
+<div id="walletStatus" class="status">Wallet: Not Connected</div>
 
-<button id="connectBtn" class="primary" onclick="connectWallet()">
-  Connect Wallet
-</button>
-  
-<input type="number" id="amount" placeholder="Enter GARV amount" />
+<button id="connectBtn" class="primary">Connect Wallet</button>
+
+<input id="amount" type="number" placeholder="Enter GARV amount" />
 
 <button id="approveBtn" class="gray" disabled>Approve GARV</button>
 <button id="stakeBtn" class="gray" disabled>Stake GARV</button>
 
 <div class="card">
-  <b>Your Stake Info</b><br><br>
-  Staked: <span id="staked">0</span><br>
-  Unlock Date: <span id="unlockDate">--</span><br>
-  Countdown: <span id="countdown">--</span><br>
-  Status: <span id="status" class="highlight">NOT STAKED</span>
+<b>Your Stake Info</b><br><br>
+Staked: <span id="staked">0</span><br>
+Unlock Date: <span id="unlockDate">--</span><br>
+Countdown: <span id="countdown">--</span><br>
+Status: <span id="status" class="highlight">NOT STAKED</span>
 </div>
 
 <button id="withdrawBtn" class="gray" disabled>Withdraw Locked</button>
 
 <div class="card small">
-  🔒 Lock Period: <b>365 Days</b><br>
-  💰 Minimum: <b>15 USDT worth GARV (Live Rate)</b><br>
-  🎁 Reward: <b>100% GARV after lock</b><br>
-  🔍 Fully on-chain • BscScan verified
+🔒 Lock: <b>365 Days</b><br>
+💰 Minimum: <b>15 USDT worth GARV</b><br>
+🎁 Reward: <b>100% after lock</b><br>
+🔍 Fully On-Chain (BscScan)
 </div>
 
 <div class="card small">
-  <b>Contract Details</b><br><br>
-  GARV Token Address:<br>
-  <div class="addr" id="tokenAddr"></div><br>
-  Staking Contract Address:<br>
-  <div class="addr" id="stakeAddr"></div><br>
-  Stake Transaction Hash:<br>
-  <div class="addr" id="stakeHash">--</div>
+<b>Contract Details</b><br><br>
+GARV Token:<br>
+<div class="addr" id="tokenAddr"></div><br>
+Staking Contract:<br>
+<div class="addr" id="stakeAddr"></div><br>
+Stake Tx Hash:<br>
+<div class="addr" id="stakeHash">--</div>
 </div>
 
 <div class="footer">
-  Connect Bharat verifies staking for platform benefits.<br>
-  Tokens remain fully user-controlled.
+Tokens stay in your wallet control.<br>
+No admin access • No custody
 </div>
 
 </div>
 
 <script>
-/* Static UI Data */
 document.getElementById("tokenAddr").innerText = GARV_TOKEN;
 document.getElementById("stakeAddr").innerText = STAKING_CONTRACT;
-
-/* Button bindings */
-document.getElementById("approveBtn").onclick = approve;
-document.getElementById("stakeBtn").onclick = stake;
-document.getElementById("withdrawBtn").onclick = withdraw;
 </script>
 
 </body>
