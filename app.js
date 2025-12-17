@@ -26,18 +26,22 @@ window.addEventListener("load", () => {
    CONNECT WALLET
 ================================ */
 async function connectWallet() {
-  if (user) return; // already connected
-
   try {
-    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-    await provider.send("eth_requestAccounts", []);
+    if (!window.ethereum) {
+      alert("Please open inside TokenPocket / MetaMask browser");
+      return;
+    }
+
+    // ✅ MOST COMPATIBLE METHOD (Mobile + Desktop)
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+
+    provider = new ethers.providers.Web3Provider(window.ethereum);
     signer = provider.getSigner();
     user = await signer.getAddress();
 
-    const network = await provider.getNetwork();
-    if (network.chainId !== CHAIN_ID) {
-      alert("Please switch to BSC Mainnet");
-      user = null;
+    const net = await provider.getNetwork();
+    if (net.chainId !== CHAIN_ID) {
+      alert("Please switch to BNB Smart Chain");
       return;
     }
 
@@ -50,24 +54,23 @@ async function connectWallet() {
       decimals = 18;
     }
 
-    /* UI UPDATE */
+    // ✅ UI UPDATE
     document.getElementById("walletStatus").innerText =
-      "Connected: " + user.slice(0, 6) + "..." + user.slice(-4);
+      "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
 
     const btn = document.getElementById("connectBtn");
     btn.innerText = "Wallet Connected";
-    btn.disabled = true;
     btn.className = "gray";
+    btn.disabled = true;
 
     document.getElementById("approveBtn").disabled = false;
     document.getElementById("stakeBtn").disabled = false;
 
-    loadStakeInfo();
+    loadStake();
 
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.error(e);
     alert("Wallet connection failed");
-    user = null;
   }
 }
 
