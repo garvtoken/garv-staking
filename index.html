@@ -3,60 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <title>GARV Token Staking</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 <script src="./config.js"></script>
 <script src="./app.js"></script>
 
 <style>
-body {
-  background: linear-gradient(180deg,#0b1220,#0f1b33);
-  font-family: Arial, sans-serif;
-  color: #fff;
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0b1220;
+  color:#fff;
 }
-.box {
-  max-width: 420px;
-  margin: auto;
-  padding: 20px;
+.box{
+  max-width:420px;
+  margin:20px auto;
+  padding:20px;
 }
-button {
-  width: 100%;
-  padding: 14px;
-  border-radius: 10px;
-  border: none;
-  font-size: 16px;
-  margin-top: 12px;
-  cursor: pointer;
-  position: relative;
-  z-index: 10;
-}
-.primary { background:#2f6bff;color:#fff; }
-.gray { background:#2b3448;color:#9aa4c0;cursor:not-allowed; }
-input {
+button,input{
   width:100%;
   padding:14px;
+  margin-top:10px;
   border-radius:10px;
   border:none;
-  margin-top:12px;
+  font-size:16px;
 }
-.card {
-  background:#16213e;
-  padding:16px;
+button.primary{background:#2563eb;color:#fff;}
+button.gray{background:#374151;color:#9ca3af;}
+.card{
+  background:#111827;
+  padding:15px;
+  margin-top:15px;
   border-radius:12px;
-  margin-top:16px;
 }
-.small { font-size:13px;color:#b6c1ff; }
-.status { margin-top:8px;font-weight:bold; }
-.lock { color:#ffd966; }
+.small{font-size:13px;color:#cbd5f5}
 </style>
 </head>
 
 <body>
 <div class="box">
 
-<h2 style="text-align:center">GARV Token Staking</h2>
-<div id="walletStatus" class="small" style="text-align:center">Wallet: Not Connected</div>
+<h2 align="center">GARV Token Staking</h2>
+<p align="center" id="walletStatus">Wallet: Not Connected</p>
 
 <button id="connectBtn" class="primary" onclick="connectWallet()">Connect Wallet</button>
 
@@ -66,11 +55,11 @@ input {
 <button id="stakeBtn" class="gray" disabled onclick="stake()">Stake GARV</button>
 
 <div class="card">
-  <b>Your Stake Info</b>
-  <div>Staked: <span id="staked">0</span></div>
-  <div>Unlock Date: <span id="unlock">--</span></div>
-  <div>Countdown: <span id="countdown">--</span></div>
-  <div id="stakeStatus" class="status">NOT STAKED</div>
+<b>Your Stake Info</b><br><br>
+Staked: <span id="staked">0</span><br>
+Unlock Date: <span id="unlockDate">--</span><br>
+Countdown: <span id="countdown">--</span><br>
+Status: <b id="status">NOT STAKED</b>
 </div>
 
 <button id="withdrawBtn" class="gray" disabled onclick="withdraw()">Withdraw Locked</button>
@@ -82,10 +71,22 @@ input {
 🔍 Fully on-chain • BscScan verified
 </div>
 
-<div class="small" style="text-align:center;margin-top:10px">
+<div class="card small">
+<b>Contract Details</b><br>
+GARV Token: <span id="garvAddr">--</span><br>
+Staking Contract: <span id="stakeAddr">--</span><br><br>
+
+<b>Live GARV Price</b><br>
+≈ <span id="liveRate">--</span> USDT<br><br>
+
+<b>Last Stake Tx</b><br>
+<span id="stakeTx">--</span>
+</div>
+
+<p class="small" align="center">
 Connect Bharat verifies staking for platform benefits.<br>
 Tokens remain fully user-controlled.
-</div>
+</p>
 
 </div>
 </body>
