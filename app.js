@@ -27,51 +27,59 @@ window.addEventListener("load", () => {
 ================================ */
 async function connectWallet() {
   try {
-    if (!window.ethereum) {
-      alert("Please open inside MetaMask / TokenPocket / Trust Wallet");
+    let eth = null;
+
+    // 1️⃣ Detect provider (modern + legacy)
+    if (window.ethereum) {
+      eth = window.ethereum;
+    } else if (window.ethereum?.providers?.length) {
+      eth = window.ethereum.providers[0];
+    } else {
+      alert("Please open this page inside MetaMask / TokenPocket / Trust Wallet DApp browser");
       return;
     }
 
-    // 1️⃣ Request account
-    await window.ethereum.request({ method: "eth_requestAccounts" });
+    // 2️⃣ Request account
+    const accounts = await eth.request({ method: "eth_requestAccounts" });
+    if (!accounts || !accounts.length) {
+      alert("Wallet permission denied");
+      return;
+    }
 
-    // 2️⃣ Provider (NO "any")
-    provider = new ethers.providers.Web3Provider(window.ethereum);
+    // 3️⃣ Provider
+    provider = new ethers.providers.Web3Provider(eth);
     signer = provider.getSigner();
     user = await signer.getAddress();
 
-    // 3️⃣ Network check (HARDCODED – no config dependency)
+    // 4️⃣ Network check (BSC Mainnet only)
     const net = await provider.getNetwork();
     if (net.chainId !== 56) {
-      alert("Please switch to BNB Smart Chain (BSC Mainnet)");
+      alert("Please switch wallet network to BNB Smart Chain (BSC)");
       return;
     }
 
-    // 4️⃣ Contracts
+    // 5️⃣ Contracts
     token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
     staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
-
     decimals = await token.decimals();
 
-    // 5️⃣ UI update (AFTER success only)
+    // 6️⃣ UI SUCCESS
     document.getElementById("walletStatus").innerText =
       "Connected: " + user.slice(0, 6) + "..." + user.slice(-4);
 
     const btn = document.getElementById("connectBtn");
     btn.innerText = "Wallet Connected";
-    btn.classList.remove("primary");
-    btn.classList.add("gray");
+    btn.className = "gray";
     btn.disabled = true;
 
     document.getElementById("approveBtn").disabled = false;
     document.getElementById("stakeBtn").disabled = false;
 
-    // 6️⃣ Load stake data
     loadStake();
 
   } catch (err) {
     console.error("CONNECT ERROR:", err);
-    alert("Wallet connection rejected or failed");
+    alert("Wallet connection failed. Please reopen in DApp browser.");
   }
 }
 
