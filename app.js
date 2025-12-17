@@ -4,7 +4,6 @@ let timer;
 
 async function connectWallet() {
   try {
-    const eth = window.ethereum;
     if (!eth) {
       alert("Open in MetaMask / TokenPocket / Trust Wallet DApp browser");
       return;
