@@ -3,213 +3,202 @@
 <head>
 <meta charset="UTF-8" />
 <title>GARV Token Staking</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<script src="./config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
 <style>
-body {
-  background:#0b1220;
-  color:#fff;
-  font-family: Arial, sans-serif;
-  display:flex;
-  justify-content:center;
-  padding:20px;
-}
-.box {
-  width:100%;
-  max-width:420px;
-  background:#111827;
-  padding:20px;
-  border-radius:14px;
-}
-h2 { text-align:center; }
-button,input {
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:8px;
-  border:none;
-  font-size:15px;
-}
-.primary { background:#2563eb; color:white; }
-.gray { background:#374151; color:white; }
-.disabled { background:#1f2937; color:#9ca3af; }
-.small {
-  font-size:13px;
-  color:#9ca3af;
-  text-align:center;
-  margin-top:8px;
-}
-.notice {
-  background:#1f2937;
-  padding:10px;
-  border-radius:8px;
-  font-size:13px;
-  margin-top:10px;
-}
-.row {
-  display:flex;
-  justify-content:space-between;
-  font-size:13px;
-  margin-top:6px;
-}
+  body {
+    background:#0b1220;
+    color:#fff;
+    font-family:Arial, sans-serif;
+  }
+  .box {
+    max-width:420px;
+    margin:40px auto;
+    background:#121a2b;
+    padding:20px;
+    border-radius:12px;
+  }
+  h2 { text-align:center; }
+
+  input, button {
+    width:100%;
+    padding:14px;
+    margin-top:10px;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+  }
+
+  .primary {
+    background:#2563eb;
+    color:#fff;
+  }
+
+  .gray {
+    background:#374151;
+    color:#9ca3af;
+  }
+
+  .disabled {
+    background:#1f2937;
+    color:#6b7280;
+  }
+
+  .info {
+    background:#0f172a;
+    padding:12px;
+    border-radius:8px;
+    margin-top:15px;
+    font-size:14px;
+  }
+
+  .small { font-size:13px; color:#9ca3af; margin-top:10px; }
 </style>
 </head>
 
 <body>
+
 <div class="box">
+  <h2>GARV Token Staking</h2>
+  <div id="walletStatus" class="small">Wallet: Not Connected</div>
 
-<h2>GARV Token Staking</h2>
+  <button id="connectBtn" class="primary" onclick="connectWallet()">Connect Wallet</button>
 
-<p id="walletStatus" class="small">Wallet: Not Connected</p>
+  <input id="amount" placeholder="Enter GARV amount" />
 
-<button id="connectBtn" class="primary" onclick="connectWallet()">
-  Connect Wallet
-</button>
-document.getElementById("connectBtn").innerText = "Wallet Connected";
-document.getElementById("connectBtn").disabled = true;
-document.getElementById("connectBtn").className = "gray";
+  <button id="approveBtn" class="disabled" disabled onclick="approve()">Approve GARV</button>
+  <button id="stakeBtn" class="disabled" disabled onclick="stake()">Stake GARV</button>
 
-<input id="amount" placeholder="Enter GARV amount" />
-
-<button id="approveBtn" class="gray" onclick="approve()" disabled>
-  Approve GARV
-</button>
-
-<button id="stakeBtn" class="gray" onclick="stake()" disabled>
-  Stake GARV
-</button>
-
-<div class="notice">
-  <div class="row">
-    <span>Staked Amount</span>
-    <span id="staked">0</span>
+  <div class="info">
+    <b>Your Stake Info</b><br>
+    Staked: <span id="staked">0</span><br>
+    Unlock In: <span id="countdown">--</span>
   </div>
-  <div class="row">
-    <span>Unlock In</span>
-    <span id="countdown">--</span>
+
+  <button id="withdrawBtn" class="disabled" disabled onclick="withdraw()">Withdraw Locked</button>
+
+  <div class="small">
+    🔒 Lock Period: 365 Days<br>
+    💰 Minimum: 15 USDT worth GARV<br>
+    🔍 Non-custodial • On-chain • Transparent
   </div>
-</div>
-
-<button id="withdrawBtn" class="disabled" onclick="withdraw()" disabled>
-  Withdraw
-</button>
-
-<div class="notice">
-  🔒 Lock Period: 365 Days<br>
-  💰 Minimum: 15 USDT worth GARV<br>
-  ⚙ Non-custodial • On-chain • Transparent
-</div>
-
 </div>
 
 <script>
-let provider, signer, user, token, staking, decimals = 18;
-let timerInterval;
+/* ================= CONFIG ================= */
+const CHAIN_ID = 56; // BSC Mainnet
+const GARV_TOKEN = "YOUR_GARV_TOKEN_ADDRESS";
+const STAKING_CONTRACT = "YOUR_STAKING_CONTRACT";
 
+const TOKEN_ABI = [
+  "function approve(address,uint256) external returns(bool)",
+  "function decimals() view returns(uint8)"
+];
+
+const STAKING_ABI = [
+  "function stake(uint256) external",
+  "function withdraw() external",
+  "function getStakeInfo(address) view returns(uint256,uint256,uint256)"
+];
+
+/* ================= STATE ================= */
+let provider, signer, user, token, staking, decimals = 18, timer;
+
+/* ================= WALLET ================= */
 async function connectWallet() {
-  try {
-    if (!window.ethereum) {
-      alert("Please open this DApp in TokenPocket / MetaMask browser");
-      return;
-    }
+  if (!window.ethereum) return alert("Open in MetaMask / TokenPocket");
 
-    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-    await provider.send("eth_requestAccounts", []);
-    signer = provider.getSigner();
-    user = await signer.getAddress();
+  provider = new ethers.providers.Web3Provider(window.ethereum);
+  await provider.send("eth_requestAccounts", []);
+  signer = provider.getSigner();
+  user = await signer.getAddress();
 
-    const net = await provider.getNetwork();
-    if (net.chainId !== CHAIN_ID) {
-      alert("Please switch to BSC Mainnet");
-      return;
-    }
+  const net = await provider.getNetwork();
+  if (net.chainId !== CHAIN_ID) return alert("Switch to BSC Mainnet");
 
-    token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
-    staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
+  token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
+  staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
 
-    try { decimals = await token.decimals(); } catch {}
+  try { decimals = await token.decimals(); } catch {}
 
-    document.getElementById("walletStatus").innerText =
-      "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
+  document.getElementById("walletStatus").innerText =
+    "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
 
-    document.getElementById("connectBtn").disabled = true;
-    document.getElementById("approveBtn").disabled = false;
-    document.getElementById("stakeBtn").disabled = false;
+  const btn = document.getElementById("connectBtn");
+  btn.innerText = "Wallet Connected";
+  btn.disabled = true;
+  btn.className = "gray";
 
-    loadStake();
+  document.getElementById("approveBtn").disabled = false;
+  document.getElementById("approveBtn").className = "primary";
 
-  } catch (e) {
-    console.error(e);
-    alert("Wallet connection failed");
-  }
+  document.getElementById("stakeBtn").disabled = false;
+  document.getElementById("stakeBtn").className = "primary";
+
+  loadStake();
 }
 
+/* ================= ACTIONS ================= */
 async function approve() {
   const amt = document.getElementById("amount").value;
-  if (!amt) return alert("Enter GARV amount");
-
+  if (!amt) return alert("Enter amount");
   const val = ethers.utils.parseUnits(amt, decimals);
   const tx = await token.approve(STAKING_CONTRACT, val);
   await tx.wait();
-
-  alert("Approval successful");
+  alert("Approve Successful");
 }
 
 async function stake() {
   const amt = document.getElementById("amount").value;
-  if (!amt) return alert("Enter GARV amount");
-
+  if (!amt) return alert("Enter amount");
   const val = ethers.utils.parseUnits(amt, decimals);
   const tx = await staking.stake(val);
   await tx.wait();
-
-  alert("Stake successful");
+  alert("Stake Successful");
   loadStake();
 }
 
 async function withdraw() {
   const tx = await staking.withdraw();
   await tx.wait();
-
-  alert("Withdraw successful");
+  alert("Withdraw Successful");
   loadStake();
 }
 
+/* ================= LOAD INFO ================= */
 async function loadStake() {
-  if (!staking || !user) return;
-
   const info = await staking.getStakeInfo(user);
-  const amount = ethers.utils.formatUnits(info[0], decimals);
-  document.getElementById("staked").innerText = amount;
-
-  if (timerInterval) clearInterval(timerInterval);
-
-  const unlock = Number(info[2]) * 1000;
-  startTimer(unlock);
+  document.getElementById("staked").innerText =
+    ethers.utils.formatUnits(info[0], decimals);
+  startTimer(Number(info[2]) * 1000);
 }
 
+/* ================= TIMER ================= */
 function startTimer(unlock) {
   const btn = document.getElementById("withdrawBtn");
+  clearInterval(timer);
 
-  timerInterval = setInterval(() => {
+  timer = setInterval(() => {
     const diff = unlock - Date.now();
 
     if (diff <= 0) {
       document.getElementById("countdown").innerText = "Unlocked";
       btn.disabled = false;
       btn.className = "primary";
-      clearInterval(timerInterval);
+      btn.innerText = "Withdraw GARV";
+      clearInterval(timer);
     } else {
+      btn.disabled = true;
+      btn.className = "disabled";
+      btn.innerText = "Withdraw Locked";
+
       const d = Math.floor(diff / 86400000);
       const h = Math.floor(diff / 3600000) % 24;
       const m = Math.floor(diff / 60000) % 60;
       document.getElementById("countdown").innerText =
         ${d}d ${h}h ${m}m;
-      btn.disabled = true;
-      btn.className = "disabled";
     }
   }, 1000);
 }
