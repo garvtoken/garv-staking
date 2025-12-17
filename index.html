@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>GARV Token Staking 365</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<title>GARV Token Staking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script src="./config.js"></script>
@@ -11,8 +11,8 @@
 <style>
 body {
   background:#0b1220;
-  font-family:Arial, sans-serif;
   color:#fff;
+  font-family: Arial, sans-serif;
   display:flex;
   justify-content:center;
   padding:20px;
@@ -22,9 +22,10 @@ body {
   max-width:420px;
   background:#111827;
   padding:20px;
-  border-radius:12px;
+  border-radius:14px;
 }
-button, input {
+h2 { text-align:center; }
+button,input {
   width:100%;
   padding:12px;
   margin-top:10px;
@@ -32,24 +33,27 @@ button, input {
   border:none;
   font-size:15px;
 }
-.primary { background:#2563eb; color:#fff; }
-.gray { background:#374151; color:#fff; }
-.notice {
-  background:#1f2937;
-  padding:10px;
-  border-radius:8px;
-  font-size:13px;
-  margin-top:12px;
-}
+.primary { background:#2563eb; color:white; }
+.gray { background:#374151; color:white; }
+.disabled { background:#1f2937; color:#9ca3af; }
 .small {
   font-size:13px;
   color:#9ca3af;
   text-align:center;
   margin-top:8px;
 }
-.copy {
-  cursor:pointer;
-  color:#60a5fa;
+.notice {
+  background:#1f2937;
+  padding:10px;
+  border-radius:8px;
+  font-size:13px;
+  margin-top:10px;
+}
+.row {
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+  margin-top:6px;
 }
 </style>
 </head>
@@ -57,90 +61,97 @@ button, input {
 <body>
 <div class="box">
 
-<h2 style="text-align:center">GARV Token Stake Now</h2>
+<h2>GARV Token Staking</h2>
 
 <p id="walletStatus" class="small">Wallet: Not Connected</p>
 
-<button class="primary" onclick="connectWallet()">Connect Wallet</button>
+<button id="connectBtn" class="primary" onclick="connectWallet()">
+  Connect Wallet
+</button>
 
-<div class="notice">
-<b>Contract Details</b><br>
-GARV Token:
-<span class="copy" onclick="copyText(GARV_TOKEN)">Copy</span><br>
-Staking Contract:
-<span class="copy" onclick="copyText(STAKING_CONTRACT)">Copy</span>
-</div>
+<input id="amount" placeholder="Enter GARV amount" />
 
-<input id="amount" placeholder="Enter GARV amount">
+<button id="approveBtn" class="gray" onclick="approve()" disabled>
+  Approve GARV
+</button>
 
-<button class="gray" onclick="approve()">Approve GARV</button>
-<button class="gray" onclick="stake()">Stake GARV</button>
-
-<div class="notice">
-<b>Your Stake Info</b><br>
-Staked Amount: <span id="stakedAmount">0</span><br>
-Unlock Date: <span id="unlockDate">--</span><br>
-Status: <span id="status">Not Staked</span>
-</div>
-
-<button class="primary" id="withdrawBtn" onclick="withdraw()" disabled>
-Withdraw GARV
+<button id="stakeBtn" class="gray" onclick="stake()" disabled>
+  Stake GARV
 </button>
 
 <div class="notice">
-🔒 Lock Period: 365 Days<br>
-💰 Minimum: 15 USDT worth GARV (Live Rate)<br>
-🎁 Reward: 100% GARV after 365 days<br>
-🔍 Fully verifiable on BscScan
+  <div class="row">
+    <span>Staked Amount</span>
+    <span id="staked">0</span>
+  </div>
+  <div class="row">
+    <span>Unlock In</span>
+    <span id="countdown">--</span>
+  </div>
 </div>
 
-<p class="small">
-Connect Bharat verifies staking for platform benefits.<br>
-Tokens remain fully user-controlled.
-</p>
+<button id="withdrawBtn" class="disabled" onclick="withdraw()" disabled>
+  Withdraw
+</button>
+
+<div class="notice">
+  🔒 Lock Period: 365 Days<br>
+  💰 Minimum: 15 USDT worth GARV<br>
+  ⚙ Non-custodial • On-chain • Transparent
+</div>
 
 </div>
 
 <script>
-let provider, signer, user, token, staking, decimals;
+let provider, signer, user, token, staking, decimals = 18;
+let timerInterval;
 
 async function connectWallet() {
-  document.getElementById("connectBtn").innerText = "Wallet Connected";
-document.getElementById("connectBtn").disabled = true;
-document.getElementById("connectBtn").className = "gray";
-  if (!window.ethereum) {
-    alert("Please open inside TokenPocket / MetaMask browser");
-    return;
+  try {
+    if (!window.ethereum) {
+      alert("Please open this DApp in TokenPocket / MetaMask browser");
+      return;
+    }
+
+    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    await provider.send("eth_requestAccounts", []);
+    signer = provider.getSigner();
+    user = await signer.getAddress();
+
+    const net = await provider.getNetwork();
+    if (net.chainId !== CHAIN_ID) {
+      alert("Please switch to BSC Mainnet");
+      return;
+    }
+
+    token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
+    staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
+
+    try { decimals = await token.decimals(); } catch {}
+
+    document.getElementById("walletStatus").innerText =
+      "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
+
+    document.getElementById("connectBtn").disabled = true;
+    document.getElementById("approveBtn").disabled = false;
+    document.getElementById("stakeBtn").disabled = false;
+
+    loadStake();
+
+  } catch (e) {
+    console.error(e);
+    alert("Wallet connection failed");
   }
-
-  await window.ethereum.request({ method: "eth_requestAccounts" });
-  provider = new ethers.providers.Web3Provider(window.ethereum);
-  signer = provider.getSigner();
-  user = await signer.getAddress();
-
-  const net = await provider.getNetwork();
-  if (net.chainId !== CHAIN_ID) {
-    alert("Switch to BNB Smart Chain");
-    return;
-  }
-
-  token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
-  staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
-  decimals = await token.decimals();
-
-  document.getElementById("walletStatus").innerText =
-    "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
-
-  loadStake();
 }
 
 async function approve() {
   const amt = document.getElementById("amount").value;
   if (!amt) return alert("Enter GARV amount");
 
-  const value = ethers.utils.parseUnits(amt, decimals);
-  const tx = await token.approve(STAKING_CONTRACT, value);
+  const val = ethers.utils.parseUnits(amt, decimals);
+  const tx = await token.approve(STAKING_CONTRACT, val);
   await tx.wait();
+
   alert("Approval successful");
 }
 
@@ -148,9 +159,10 @@ async function stake() {
   const amt = document.getElementById("amount").value;
   if (!amt) return alert("Enter GARV amount");
 
-  const value = ethers.utils.parseUnits(amt, decimals);
-  const tx = await staking.stake(value);
+  const val = ethers.utils.parseUnits(amt, decimals);
+  const tx = await staking.stake(val);
   await tx.wait();
+
   alert("Stake successful");
   loadStake();
 }
@@ -158,7 +170,8 @@ async function stake() {
 async function withdraw() {
   const tx = await staking.withdraw();
   await tx.wait();
-  alert("Withdraw completed");
+
+  alert("Withdraw successful");
   loadStake();
 }
 
@@ -167,23 +180,37 @@ async function loadStake() {
 
   const info = await staking.getStakeInfo(user);
   const amount = ethers.utils.formatUnits(info[0], decimals);
+  document.getElementById("staked").innerText = amount;
 
-  if (info[0] > 0) {
-    document.getElementById("stakedAmount").innerText = amount;
-    document.getElementById("unlockDate").innerText =
-      new Date(Number(info[2]) * 1000).toLocaleDateString();
-    document.getElementById("status").innerText = "Locked";
-    if (Date.now() / 1000 >= info[2]) {
-      document.getElementById("withdrawBtn").disabled = false;
-      document.getElementById("status").innerText = "Unlocked";
-    }
-  }
+  if (timerInterval) clearInterval(timerInterval);
+
+  const unlock = Number(info[2]) * 1000;
+  startTimer(unlock);
 }
 
-function copyText(text) {
-  navigator.clipboard.writeText(text);
-  alert("Copied");
+function startTimer(unlock) {
+  const btn = document.getElementById("withdrawBtn");
+
+  timerInterval = setInterval(() => {
+    const diff = unlock - Date.now();
+
+    if (diff <= 0) {
+      document.getElementById("countdown").innerText = "Unlocked";
+      btn.disabled = false;
+      btn.className = "primary";
+      clearInterval(timerInterval);
+    } else {
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor(diff / 3600000) % 24;
+      const m = Math.floor(diff / 60000) % 60;
+      document.getElementById("countdown").innerText =
+        ${d}d ${h}h ${m}m;
+      btn.disabled = true;
+      btn.className = "disabled";
+    }
+  }, 1000);
 }
 </script>
+
 </body>
 </html>
