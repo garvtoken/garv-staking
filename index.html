@@ -68,6 +68,9 @@ button,input {
 <button id="connectBtn" class="primary" onclick="connectWallet()">
   Connect Wallet
 </button>
+document.getElementById("connectBtn").innerText = "Wallet Connected";
+document.getElementById("connectBtn").disabled = true;
+document.getElementById("connectBtn").className = "gray";
 
 <input id="amount" placeholder="Enter GARV amount" />
 
