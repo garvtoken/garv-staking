@@ -7,19 +7,19 @@ let decimals = 18;
 let stakeTxHash = "";
 
 /* ===============================
-   SAFE WALLET INIT (Mobile Ready)
+   DOM READY (Mobile Safe)
 ================================ */
-window.addEventListener("load", () => {
+document.addEventListener("DOMContentLoaded", () => {
   const connectBtn = document.getElementById("connectBtn");
   if (!connectBtn) return;
 
-  connectBtn.addEventListener("click", async () => {
+  connectBtn.onclick = async () => {
     if (typeof window.ethereum === "undefined") {
-      alert("Please open this DApp in MetaMask / TokenPocket browser");
+      alert("Please open this DApp in MetaMask / TokenPocket / Trust Wallet browser");
       return;
     }
     await connectWallet();
-  });
+  };
 });
 
 /* ===============================
@@ -29,41 +29,40 @@ async function connectWallet() {
   try {
     let eth = null;
 
-    // 1️⃣ Detect provider (modern + legacy)
+    // Provider detect (mobile + multi-wallet safe)
     if (window.ethereum) {
       eth = window.ethereum;
     } else if (window.ethereum?.providers?.length) {
       eth = window.ethereum.providers[0];
     } else {
-      alert("Please open this page inside MetaMask / TokenPocket / Trust Wallet DApp browser");
+      alert("No Web3 wallet detected");
       return;
     }
 
-    // 2️⃣ Request account
+    // Request account
     const accounts = await eth.request({ method: "eth_requestAccounts" });
-    if (!accounts || !accounts.length) {
+    if (!accounts || accounts.length === 0) {
       alert("Wallet permission denied");
       return;
     }
 
-    // 3️⃣ Provider
     provider = new ethers.providers.Web3Provider(eth);
     signer = provider.getSigner();
     user = await signer.getAddress();
 
-    // 4️⃣ Network check (BSC Mainnet only)
+    // Network check
     const net = await provider.getNetwork();
-    if (net.chainId !== 56) {
-      alert("Please switch wallet network to BNB Smart Chain (BSC)");
+    if (net.chainId !== CHAIN_ID) {
+      alert("Please switch to BNB Smart Chain (BSC Mainnet)");
       return;
     }
 
-    // 5️⃣ Contracts
+    // Init contracts
     token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
     staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
     decimals = await token.decimals();
 
-    // 6️⃣ UI SUCCESS
+    // UI update
     document.getElementById("walletStatus").innerText =
       "Connected: " + user.slice(0, 6) + "..." + user.slice(-4);
 
@@ -75,11 +74,12 @@ async function connectWallet() {
     document.getElementById("approveBtn").disabled = false;
     document.getElementById("stakeBtn").disabled = false;
 
-    loadStake();
+    // ✅ CORRECT FUNCTION
+    loadStakeInfo();
 
   } catch (err) {
     console.error("CONNECT ERROR:", err);
-    alert("Wallet connection failed. Please reopen in DApp browser.");
+    alert("Wallet connection failed: " + (err?.message || "Unknown error"));
   }
 }
 
@@ -113,9 +113,12 @@ async function stake() {
   stakeTxHash = tx.hash;
 
   await tx.wait();
-  alert("Stake successful");
 
-  document.getElementById("stakeHash").innerText = stakeTxHash;
+  if (document.getElementById("stakeHash")) {
+    document.getElementById("stakeHash").innerText = stakeTxHash;
+  }
+
+  alert("Stake successful");
   loadStakeInfo();
 }
 
@@ -147,9 +150,11 @@ async function loadStakeInfo() {
 
   if (Number(info[0]) === 0) {
     document.getElementById("status").innerText = "NOT STAKED";
-    document.getElementById("withdrawBtn").disabled = true;
-    document.getElementById("withdrawBtn").className = "gray";
     document.getElementById("countdown").innerText = "--";
+
+    const w = document.getElementById("withdrawBtn");
+    w.disabled = true;
+    w.className = "gray";
     return;
   }
 
@@ -163,8 +168,7 @@ function startCountdown(unlockTime) {
   const withdrawBtn = document.getElementById("withdrawBtn");
 
   const timer = setInterval(() => {
-    const now = Date.now();
-    const diff = unlockTime - now;
+    const diff = unlockTime - Date.now();
 
     if (diff <= 0) {
       document.getElementById("countdown").innerText = "Unlocked";
