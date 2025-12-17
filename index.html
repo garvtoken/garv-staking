@@ -105,6 +105,9 @@ Tokens remain fully user-controlled.
 let provider, signer, user, token, staking, decimals;
 
 async function connectWallet() {
+  document.getElementById("connectBtn").innerText = "Wallet Connected";
+document.getElementById("connectBtn").disabled = true;
+document.getElementById("connectBtn").className = "gray";
   if (!window.ethereum) {
     alert("Please open inside TokenPocket / MetaMask browser");
     return;
