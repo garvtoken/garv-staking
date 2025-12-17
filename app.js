@@ -1,20 +1,22 @@
-let provider, signer, user, token, staking, decimals = 18;
+let provider, signer, user, token, staking;
+let decimals = 18;
+let timer = null;
 
 async function connectWallet() {
   try {
     if (!window.ethereum) {
-      alert("Please open in TokenPocket / MetaMask browser");
+      alert("Please open in MetaMask / TokenPocket browser");
       return;
     }
 
-    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
     user = await signer.getAddress();
 
     const net = await provider.getNetwork();
     if (net.chainId !== CHAIN_ID) {
-      alert("Please switch to BSC Mainnet");
+      alert("Please switch to BSC Mainnet (56)");
       return;
     }
 
@@ -28,45 +30,71 @@ async function connectWallet() {
     }
 
     document.getElementById("walletStatus").innerText =
-      "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
+      Connected: ${user.slice(0,6)}...${user.slice(-4)};
 
     document.getElementById("approveBtn").disabled = false;
     document.getElementById("stakeBtn").disabled = false;
 
     loadStake();
 
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
     alert("Wallet connection failed");
   }
 }
 
 async function approve() {
-  const amt = document.getElementById("amount").value;
-  if (!amt) return alert("Enter amount");
+  try {
+    const amt = document.getElementById("amount").value;
+    if (!amt) return alert("Enter staking amount");
 
-  const val = ethers.utils.parseUnits(amt, decimals);
-  const tx = await token.approve(STAKING_CONTRACT, val);
-  await tx.wait();
-  alert("Approve successful");
+    const val = ethers.utils.parseUnits(amt, decimals);
+    document.getElementById("approveBtn").disabled = true;
+
+    const tx = await token.approve(STAKING_CONTRACT, val);
+    await tx.wait();
+
+    alert("Approve successful");
+    document.getElementById("stakeBtn").disabled = false;
+  } catch (e) {
+    alert("Approve failed or rejected");
+  } finally {
+    document.getElementById("approveBtn").disabled = false;
+  }
 }
 
 async function stake() {
-  const amt = document.getElementById("amount").value;
-  if (!amt) return alert("Enter amount");
+  try {
+    const amt = document.getElementById("amount").value;
+    if (!amt) return alert("Enter staking amount");
 
-  const val = ethers.utils.parseUnits(amt, decimals);
-  const tx = await staking.stake(val);
-  await tx.wait();
-  alert("Stake successful");
-  loadStake();
+    const val = ethers.utils.parseUnits(amt, decimals);
+    document.getElementById("stakeBtn").disabled = true;
+
+    const tx = await staking.stake(val);
+    await tx.wait();
+
+    alert("Stake successful");
+    loadStake();
+  } catch (e) {
+    alert("Stake failed or rejected");
+  } finally {
+    document.getElementById("stakeBtn").disabled = false;
+  }
 }
 
 async function withdraw() {
-  const tx = await staking.withdraw();
-  await tx.wait();
-  alert("Withdraw successful");
-  loadStake();
+  try {
+    document.getElementById("withdrawBtn").disabled = true;
+
+    const tx = await staking.withdraw();
+    await tx.wait();
+
+    alert("Withdraw successful");
+    loadStake();
+  } catch (e) {
+    alert("Withdraw failed or still locked");
+  }
 }
 
 async function loadStake() {
@@ -82,18 +110,23 @@ async function loadStake() {
 }
 
 function startTimer(unlock) {
-  const btn = document.getElementById("withdrawBtn");
+  if (timer) clearInterval(timer);
 
-  setInterval(() => {
+  const btn = document.getElementById("withdrawBtn");
+  btn.disabled = true;
+
+  timer = setInterval(() => {
     const diff = unlock - Date.now();
+
     if (diff <= 0) {
       document.getElementById("countdown").innerText = "Unlocked";
       btn.disabled = false;
+      clearInterval(timer);
     } else {
-      btn.disabled = true;
       const d = Math.floor(diff / 86400000);
       const h = Math.floor(diff / 3600000) % 24;
       const m = Math.floor(diff / 60000) % 60;
+
       document.getElementById("countdown").innerText =
         ${d}d ${h}h ${m}m;
     }
