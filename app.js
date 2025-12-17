@@ -3,12 +3,11 @@ let decimals = 18;
 let timer;
 
 async function connectWallet() {
-  try {
-    if (!eth) {
-      alert("Open in MetaMask / TokenPocket / Trust Wallet DApp browser");
-      return;
-    }
-
+  try {const eth = window.ethereum;
+if (!eth) {
+  alert("Please open in MetaMask / TokenPocket / Trust Wallet DApp browser");
+  return;
+}
     provider = new ethers.providers.Web3Provider(eth, "any");
     await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
