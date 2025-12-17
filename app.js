@@ -28,49 +28,50 @@ window.addEventListener("load", () => {
 async function connectWallet() {
   try {
     if (!window.ethereum) {
-      alert("Please open inside TokenPocket / MetaMask browser");
+      alert("Please open inside MetaMask / TokenPocket / Trust Wallet");
       return;
     }
 
-    // ✅ MOST COMPATIBLE METHOD (Mobile + Desktop)
+    // 1️⃣ Request account
     await window.ethereum.request({ method: "eth_requestAccounts" });
 
+    // 2️⃣ Provider (NO "any")
     provider = new ethers.providers.Web3Provider(window.ethereum);
     signer = provider.getSigner();
     user = await signer.getAddress();
 
+    // 3️⃣ Network check (HARDCODED – no config dependency)
     const net = await provider.getNetwork();
-    if (net.chainId !== CHAIN_ID) {
-      alert("Please switch to BNB Smart Chain");
+    if (net.chainId !== 56) {
+      alert("Please switch to BNB Smart Chain (BSC Mainnet)");
       return;
     }
 
+    // 4️⃣ Contracts
     token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
     staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
 
-    try {
-      decimals = await token.decimals();
-    } catch {
-      decimals = 18;
-    }
+    decimals = await token.decimals();
 
-    // ✅ UI UPDATE
+    // 5️⃣ UI update (AFTER success only)
     document.getElementById("walletStatus").innerText =
-      "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
+      "Connected: " + user.slice(0, 6) + "..." + user.slice(-4);
 
     const btn = document.getElementById("connectBtn");
     btn.innerText = "Wallet Connected";
-    btn.className = "gray";
+    btn.classList.remove("primary");
+    btn.classList.add("gray");
     btn.disabled = true;
 
     document.getElementById("approveBtn").disabled = false;
     document.getElementById("stakeBtn").disabled = false;
 
+    // 6️⃣ Load stake data
     loadStake();
 
-  } catch (e) {
-    console.error(e);
-    alert("Wallet connection failed");
+  } catch (err) {
+    console.error("CONNECT ERROR:", err);
+    alert("Wallet connection rejected or failed");
   }
 }
 
