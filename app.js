@@ -126,24 +126,31 @@ async function stake() {
 
 /* ================= LOAD STAKE ================= */
 async function loadStakeInfo() {
+  if (!staking || !user) return;
+
   const info = await staking.getStakeInfo(user);
 
-  const staked = ethers.utils.formatUnits(info[0], decimals);
-  const unlock = Number(info[2]) * 1000;
+  const amount = ethers.utils.formatUnits(info[0], decimals);
+  const unlockTime = Number(info[2]) * 1000;
+  const now = Date.now();
 
-  document.getElementById("staked").innerText = staked;
+  document.getElementById("staked").innerText = amount;
 
   if (Number(info[0]) === 0) {
     document.getElementById("status").innerText = "NOT STAKED";
-    document.getElementById("unlockDate").innerText = "--";
-    document.getElementById("countdown").innerText = "--";
+    document.getElementById("withdrawBtn").disabled = true;
     return;
   }
 
-  document.getElementById("unlockDate").innerText =
-    new Date(unlock).toLocaleDateString();
+  if (now < unlockTime) {
+    document.getElementById("status").innerText = "LOCKED";
+    startCountdown(unlockTime);
+    return;
+  }
 
-  startCountdown(unlock);
+  document.getElementById("status").innerText = "UNLOCKED";
+  document.getElementById("withdrawBtn").disabled = false;
+  document.getElementById("withdrawBtn").className = "primary";
 }
 
 /* ================= COUNTDOWN ================= */
