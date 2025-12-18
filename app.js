@@ -1,16 +1,20 @@
-let provider, signer, user;
-let token, staking;
+let provider,
+let signer,
+let user;
+let token, 
+let stake;
 let decimals = 18;
+let approveTxHash = "";
 let stakeTxHash = "";
 
-async function checkMinimumUSDT(garvAmount) {
-  // TEMP FIX: manual rate (later you can connect Pancake price feed)
+async function checkMinimumUSDT(garvtokenAmount) {
+  //TEMP FIX: manual rate (later you can connect Pancake price feed)
   const GARV_USDT_RATE = 0.02; // example: 1 GARV = $0.02
 
   const usdtValue = garvAmount * GARV_USDT_RATE;
 
   if (usdtValue < 15) {
-    alert("Minimum staking amount must be 15 USDT worth of GARV (Live Rate)");
+    alert("Minimum staking GARV Token amount must be 15 USDT worth of GARV (Live Rate)");
     return false;
   }
   return true;
