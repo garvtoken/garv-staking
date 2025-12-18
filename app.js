@@ -7,7 +7,6 @@ let stakeTxHash = "";
 
 async function checkMinimumUSDT(garvtokenAmount) {
   //TEMP FIX: manual rate (later you can connect Pancake price feed)
-  const GARV_USDT_RATE = 0.02; // example: 1 GARV = $0.02
 
   const usdtValue = garvAmount * GARV_USDT_RATE;
 
