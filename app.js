@@ -132,7 +132,7 @@ async function stake() {
 
   // UI update
   document.getElementById("stakeBtn").disabled = true;
-  document.getElementById("stakeBtn").className = "gray";
+  document.getElementById("stakeBtn").className = "primary";
 
   loadStakeInfo();
 }
