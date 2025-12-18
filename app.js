@@ -3,7 +3,6 @@ let token, staking;
 let decimals = 18;
 let stakeTxHash = "";
 
-/* ================= LIVE PRICE ================= */
 async function checkMinimumUSDT(garvAmount) {
   // TEMP FIX: manual rate (later you can connect Pancake price feed)
   const GARV_USDT_RATE = 0.02; // example: 1 GARV = $0.02
@@ -80,8 +79,8 @@ async function connectWallet() {
     btn.className = "gray";
     btn.disabled = true;
 
-    document.getElementById("approveBtn").disabled = false;
-    document.getElementById("stakeBtn").disabled = false;
+    document.getElementById("approveBtn").disabled = true;
+    document.getElementById("stakeBtn").disabled = true;
 
     loadStakeInfo();
 
