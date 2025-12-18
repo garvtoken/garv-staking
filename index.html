@@ -64,7 +64,7 @@ input,button{
 
 <div class="card">
 <b>Your Stake Info</b><br><br>
-Staked: <span id="staked">0</span><br>
+Staked Token Amount: <span id="stakedTokenAmount">0</span><br>
 Unlock Date: <span id="unlockDate">--</span><br>
 Countdown: <span id="countdown">--</span><br>
 Status: <span id="status" class="highlight">NOT STAKED</span>
@@ -74,19 +74,21 @@ Status: <span id="status" class="highlight">NOT STAKED</span>
 
 <div class="card small">
 🔒 Lock: <b>365 Days</b><br>
-💰 Minimum: <b>15 USDT worth GARV</b><br>
+💰 Minimum: <b>15 USDT worth GARV Token</b><br>
 🎁 Reward: <b>100% after lock</b><br>
 🔍 Fully On-Chain (BscScan)
 </div>
 
 <div class="card small">
 <b>Contract Details</b><br><br>
-GARV Token:<br>
+GARV Token Contract Address:<br>
 <div class="addr" id="tokenAddr"></div><br>
-Staking Contract:<br>
+Staking Contract Address:<br>
 <div class="addr" id="stakeAddr"></div><br>
+Approve Tx Hash:<br>
+<div class="addr" id="approveHash">--</div><br>
 Stake Tx Hash:<br>
-<div class="addr" id="stakeHash">--</div>
+<div class="addr" id="stakeHash">--</div><br>
 </div>
 
 <div class="footer">
