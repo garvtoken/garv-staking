@@ -3,6 +3,20 @@ let token, staking;
 let decimals = 18;
 let stakeTxHash = "";
 
+/* ================= LIVE PRICE ================= */
+async function checkMinimumUSDT(garvAmount) {
+  // TEMP FIX: manual rate (later you can connect Pancake price feed)
+  const GARV_USDT_RATE = 0.02; // example: 1 GARV = $0.02
+
+  const usdtValue = garvAmount * GARV_USDT_RATE;
+
+  if (usdtValue < 15) {
+    alert("Minimum staking amount must be 15 USDT worth of GARV (Live Rate)");
+    return false;
+  }
+  return true;
+}
+
 /* ================= CONNECT BUTTON ================= */
 window.addEventListener("load", () => {
   document.getElementById("connectBtn").onclick = connectWallet;
