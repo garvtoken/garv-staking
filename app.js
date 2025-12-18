@@ -1,7 +1,7 @@
-let provider,
-let signer,
+let provider;
+let signer;
 let user;
-let token, 
+let token;
 let stake;
 let decimals = 18;
 let approveTxHash = "";
