@@ -14,28 +14,52 @@ window.addEventListener("load", () => {
 /* ================= CONNECT WALLET ================= */
 async function connectWallet() {
   try {
-    if (!window.ethereum) {
-      alert("Open in TokenPocket / Trust / MetaMask browser");
+    // 1️⃣ Check provider
+    if (typeof window.ethereum === "undefined") {
+      alert(
+        "Please open this website inside a decentralized wallet DApp Browser.\n\n" +
+        "Supported wallets:\n" +
+        "• TokenPocket\n" +
+        "• Trust Wallet\n" +
+        "• MetaMask\n" +
+        "• OKX Wallet\n" +
+        "• Binance Web3 Wallet"
+      );
       return;
     }
 
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-    provider = new ethers.providers.Web3Provider(window.ethereum);
+    const eth = window.ethereum;
+
+    // 2️⃣ Request account access
+    const accounts = await eth.request({
+      method: "eth_requestAccounts"
+    });
+
+    if (!accounts || accounts.length === 0) {
+      alert("Wallet permission rejected");
+      return;
+    }
+
+    // 3️⃣ Create provider & signer
+    provider = new ethers.providers.Web3Provider(eth, "any");
     signer = provider.getSigner();
     user = await signer.getAddress();
 
+    // 4️⃣ Network check (BSC only)
     const net = await provider.getNetwork();
     if (net.chainId !== 56) {
-      alert("Switch to BNB Smart Chain");
+      alert("Please switch network to BNB Smart Chain (BSC)");
       return;
     }
 
+    // 5️⃣ Init contracts
     token = new ethers.Contract(GARV_TOKEN, TOKEN_ABI, signer);
     staking = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
     decimals = await token.decimals();
 
+    // 6️⃣ UI update
     document.getElementById("walletStatus").innerText =
-      "Connected: " + user.slice(0,6) + "..." + user.slice(-4);
+      "Connected: " + user.slice(0, 6) + "..." + user.slice(-4);
 
     const btn = document.getElementById("connectBtn");
     btn.innerText = "Wallet Connected";
@@ -47,9 +71,9 @@ async function connectWallet() {
 
     loadStakeInfo();
 
-  } catch (e) {
-    console.error(e);
-    alert("Wallet connection failed");
+  } catch (error) {
+    console.error("Wallet connect error:", error);
+    alert("Wallet connection failed or cancelled by user.");
   }
 }
 
