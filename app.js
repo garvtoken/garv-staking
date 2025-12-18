@@ -79,8 +79,8 @@ async function connectWallet() {
     btn.className = "gray";
     btn.disabled = true;
 
-    document.getElementById("approveBtn").disabled = true;
-    document.getElementById("stakeBtn").disabled = true;
+    document.getElementById("approveBtn").disabled = false;
+    document.getElementById("stakeBtn").disabled = false;
 
     loadStakeInfo();
 
@@ -108,7 +108,7 @@ async function approve() {
 
   // UI update
   document.getElementById("approveBtn").disabled = true;
-  document.getElementById("approveBtn").className = "gray";
+  document.getElementById("approveBtn").className = "primary";
 
   document.getElementById("stakeBtn").disabled = false;
   document.getElementById("stakeBtn").className = "primary";
