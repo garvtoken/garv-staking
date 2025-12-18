@@ -1,6 +1,4 @@
-let provider;
-let signer;
-let user;
+let provider, signer, user;
 let token;
 let stake;
 let decimals = 18;
