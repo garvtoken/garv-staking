@@ -79,13 +79,26 @@ async function connectWallet() {
 
 /* ================= APPROVE ================= */
 async function approve() {
-  const amt = document.getElementById("amount").value;
-  if (!amt) return alert("Enter amount");
+  if (!user) return alert("Connect wallet first");
 
-  const val = ethers.utils.parseUnits(amt, decimals);
-  const tx = await token.approve(STAKING_CONTRACT, val);
+  const amt = Number(document.getElementById("amount").value);
+  if (!amt || amt <= 0) return alert("Enter valid GARV amount");
+
+  const ok = await checkMinimumUSDT(amt);
+  if (!ok) return;
+
+  const value = ethers.utils.parseUnits(amt.toString(), decimals);
+  const tx = await token.approve(STAKING_CONTRACT, value);
   await tx.wait();
-  alert("Approved");
+
+  alert("Approve successful");
+
+  // UI update
+  document.getElementById("approveBtn").disabled = true;
+  document.getElementById("approveBtn").className = "gray";
+
+  document.getElementById("stakeBtn").disabled = false;
+  document.getElementById("stakeBtn").className = "primary";
 }
 
 /* ================= STAKE ================= */
