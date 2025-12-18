@@ -113,9 +113,6 @@ async function approve() {
   // UI update
   document.getElementById("approveBtn").disabled = true;
   document.getElementById("approveBtn").className = "primary";
-
-  document.getElementById("stakeBtn").disabled = false;
-  document.getElementById("stakeBtn").className = "primary";
 }
 
 /* ================= STAKE ================= */
